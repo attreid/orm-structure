@@ -18,32 +18,36 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
 
     public function __construct(Connection $connection, Cache $cache) {
         parent::__construct($connection, $cache);
-        $this->checkTable();
+        $this->checkTable($cache);
     }
 
     /** @inheritdoc */
     public function getTableName() {
         if (!$this->tableName) {
-            return str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
+            $this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
         }
 
-        return $this->tableName;
+        return $this->getTablePrefix() . $this->tableName;
     }
 
-    private function checkTable() {
+    /**
+     * Vrati predponu nazvu tabulky
+     * @return string
+     */
+    public function getTablePrefix() {
+        return '';
+    }
+
+    private function checkTable($cache) {
         $key = $this->getTableName() . 'Generator';
         $result = $this->cacheLoad($key);
         if ($result === NULL) {
-            $result = $this->cacheSave($key, function() {
-                $table = new Table($this->getTableName(), $this->connection, $this->cache);
+            $result = $this->cacheSave($key, function() use ($cache) {
+                $table = new Table($this->getTableName(), $this->getTablePrefix(), $this->connection, $cache);
                 $this->createTable($table);
 
-                $exist = $this->connection->query("SHOW TABLES LIKE %s", $this->getTableName())->fetch();
-                if (!$exist) {
-                    $table->create();
+                if ($table->check()) {
                     $this->loadDefaultData();
-                } else {
-                    $table->modify();
                 }
                 return TRUE;
             });

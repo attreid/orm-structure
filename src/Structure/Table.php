@@ -50,8 +50,15 @@ class Table {
     /** @var string */
     private $addition = NULL;
 
-    public function __construct($name, Connection $connection, Cache $cache) {
+    /** @var Table[] */
+    private $relationTables = [];
+
+    /** @var string */
+    private $prefix;
+
+    public function __construct($name, $prefix, Connection $connection, Cache $cache) {
         $this->name = $name;
+        $this->prefix = $prefix;
         $this->connection = $connection;
         $this->cache = $cache;
     }
@@ -87,17 +94,37 @@ class Table {
     }
 
     /**
-     * Vrati primarni klic
-     * @return array
+     * Vytvori spojovou tabulku
+     * @param string $name
+     * @return self
      */
-    public function getPrimaryKey() {
-        return $this->primaryKey;
+    public function createRelationTable($name) {
+        return $this->relationTables[] = new Table($this->prefix . $name, $this->prefix, $this->connection, $this->cache);
+    }
+
+    /**
+     * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
+     * @return boolean TRUE => pokud je vytvorena, FALSE => pokud jiz existovala
+     */
+    public function check() {
+        $exist = $this->connection->query("SHOW TABLES LIKE %s", $this->name)->fetch();
+        if (!$exist) {
+            $this->create();
+            $result = TRUE;
+        } else {
+            $this->modify();
+            $result = FALSE;
+        }
+        foreach ($this->relationTables as $table) {
+            $table->check();
+        }
+        return $result;
     }
 
     /**
      * Vytvori tabulku
      */
-    public function create() {
+    private function create() {
         $query = "CREATE TABLE IF NOT EXISTS $this->name (\n"
                 . implode(",\n", $this->columns) . ",\n"
                 . (!empty($this->primaryKey) ? 'PRIMARY KEY (' . implode(',', $this->primaryKey) . ')' . (empty($this->keys) ? '' : ",\n") : '')
@@ -112,7 +139,7 @@ class Table {
     /**
      * Upravi tabulku
      */
-    public function modify() {
+    private function modify() {
         $drop = $modify = $add = $primKey = [];
 
         // sloupce
@@ -194,6 +221,14 @@ class Table {
     }
 
     /**
+     * Vrati primarni klic
+     * @return array
+     */
+    public function getPrimaryKey() {
+        return $this->primaryKey;
+    }
+
+    /**
      * Pridavek za dotaz (partition atd)
      * @param string $addition
      */
@@ -226,7 +261,7 @@ class Table {
     /**
      * Nastavi cizi klic
      * @param string $name
-     * @param string|Mapper $mapperClass
+     * @param string|Table $mapperClass klic uz musi byt v tabulce nastaven
      * @param mixed $onDelete FALSE => NO ACTION, TRUE => CASCADE, NULL => SET NULL
      * @param mixed $onUpdate FALSE => NO ACTION, TRUE => CASCADE, NULL => SET NULL
      * @return Column
@@ -243,10 +278,10 @@ class Table {
 
         $this->setKey($name);
 
-        if ($mapperClass instanceof Mapper) {
-            $tableName = $this->name;
-            $tableKey = $this->getPrimaryKey()[0];
-        } else {
+        if ($mapperClass instanceof Table) {
+            $tableName = $mapperClass->name;
+            $tableKey = $mapperClass->getPrimaryKey()[0];
+        } elseif (is_string($mapperClass)) {
             /* @var $mapper Mapper */
             $mapper = new $mapperClass($this->connection, $this->cache);
             $tableName = $mapper->getTableName();
