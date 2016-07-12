@@ -252,8 +252,6 @@ class Table {
      */
     public function addPrimaryKey($name) {
         $column = $this->addColumn($name);
-        $column->int()
-                ->setAutoIncrement();
         $this->setPrimaryKey($name);
         return $column;
     }
