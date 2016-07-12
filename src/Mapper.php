@@ -40,9 +40,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
 
     private function checkTable($cache) {
         $key = $this->getTableName() . 'Generator';
-        $result = $this->cacheLoad($key);
+        $result = $this->cache->load($key);
         if ($result === NULL) {
-            $result = $this->cacheSave($key, function() use ($cache) {
+            $result = $this->cache->save($key, function() use ($cache) {
                 $table = new Table($this->getTableName(), $this->getTablePrefix(), $this->connection, $cache);
                 $this->createTable($table);
 
