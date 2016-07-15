@@ -5,7 +5,8 @@ namespace NAttreid\Orm;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection,
     Nette\Caching\Cache,
     NAttreid\Orm\Structure\Table,
-    Nextras\Dbal\Connection;
+    Nextras\Dbal\Connection,
+    Nextras\Dbal\QueryBuilder\QueryBuilder;
 
 /**
  * Mapper
@@ -28,6 +29,15 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
         }
 
         return $this->getTablePrefix() . $this->tableName;
+    }
+
+    /**
+     * Vrati vysledek dotazu
+     * @param QueryBuilder $builder
+     * @return Result | NULL
+     */
+    protected function execute(QueryBuilder $builder) {
+        return $this->connection->queryArgs($builder->getQuerySql(), $builder->getQueryParameters());
     }
 
     /**
