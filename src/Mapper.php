@@ -84,4 +84,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
         );
     }
 
+    /**
+     * INSERT
+     * @param array $data
+     */
+    protected function insert(array $data) {
+        $this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
+    }
+
 }
