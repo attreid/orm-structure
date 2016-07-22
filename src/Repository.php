@@ -25,4 +25,12 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository {
         return $this->findAll()->orderBy('id')->fetchPairs('id', 'name');
     }
 
+    /**
+     * Je tabulka prazdna?
+     * @return boolean
+     */
+    public function isEmpty() {
+        return $this->findAll()->count() == 0;
+    }
+
 }
