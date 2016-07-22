@@ -98,8 +98,20 @@ class Table {
      * @param string $name
      * @return self
      */
-    public function createRelationTable($name) {
-        return $this->relationTables[] = new Table($this->prefix . $name, $this->prefix, $this->connection, $this->cache);
+    public function createRelationTable($table, $table2) {
+        if (!is_subclass_of($table, Mapper::class) || !is_subclass_of($table2, Mapper::class)) {
+            throw new \InvalidArgumentException;
+        }
+
+        $mapper = new $table($this->connection, $this->cache);
+        $tableName = $mapper->getTableName();
+
+        $mapper2 = new $table2($this->connection, $this->cache);
+        $tableName2 = $mapper2->getTableName();
+
+        $name = $this->prefix . $tableName . '_x_' . $this->prefix . $tableName2;
+
+        return $this->relationTables[] = new Table($name, $this->prefix, $this->connection, $this->cache);
     }
 
     /**
@@ -279,11 +291,13 @@ class Table {
         if ($mapperClass instanceof Table) {
             $tableName = $mapperClass->name;
             $tableKey = $mapperClass->getPrimaryKey()[0];
-        } elseif (is_string($mapperClass)) {
+        } elseif (is_subclass_of($mapperClass, Mapper::class)) {
             /* @var $mapper Mapper */
             $mapper = new $mapperClass($this->connection, $this->cache);
             $tableName = $mapper->getTableName();
             $tableKey = $this->connection->query('SHOW INDEX FROM ' . $tableName . ' WHERE Key_name = %s ', 'PRIMARY')->fetch()->Column_name;
+        } else {
+            throw new \InvalidArgumentException;
         }
 
         $foreignName = 'fk_' . $this->name . '_' . $name . '_' . $tableName . '_' . $tableKey;
