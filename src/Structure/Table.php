@@ -99,17 +99,27 @@ class Table {
      * @return self
      */
     public function createRelationTable($table, $table2) {
-        if (!is_subclass_of($table, Mapper::class) || !is_subclass_of($table2, Mapper::class)) {
+        if ($table instanceof Table) {
+            $tableName = $table->name;
+        } elseif (is_subclass_of($table, Mapper::class)) {
+            /* @var $mapper Mapper */
+            $mapper = new $table($this->connection, $this->cache);
+            $tableName = $mapper->getTableName();
+        } else {
             throw new \InvalidArgumentException;
         }
 
-        $mapper = new $table($this->connection, $this->cache);
-        $tableName = $mapper->getTableName();
+        if ($table2 instanceof Table) {
+            $tableName2 = $table2->name;
+        } elseif (is_subclass_of($table2, Mapper::class)) {
+            /* @var $mapper2 Mapper */
+            $mapper2 = new $table2($this->connection, $this->cache);
+            $tableName2 = $mapper2->getTableName();
+        } else {
+            throw new \InvalidArgumentException;
+        }
 
-        $mapper2 = new $table2($this->connection, $this->cache);
-        $tableName2 = $mapper2->getTableName();
-
-        $name = $this->prefix . $tableName . '_x_' . $this->prefix . $tableName2;
+        $name = $tableName . '_x_' . $tableName2;
 
         return $this->relationTables[] = new Table($name, $this->prefix, $this->connection, $this->cache);
     }
