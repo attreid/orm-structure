@@ -4,7 +4,8 @@ namespace Nattreid\Orm\DI;
 
 use Nextras\Orm\Entity\Reflection\MetadataParserFactory,
     Nextras\Orm\InvalidStateException,
-    Nextras\Orm\Model\Model;
+    Nextras\Orm\Model\Model,
+    NAttreid\Orm\Structure\Table;
 
 /**
  * Rozsireni orm
@@ -18,6 +19,8 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension {
             'metadataParserFactory' => MetadataParserFactory::class,
         ];
 
+        $builder = $this->getContainerBuilder();
+
         $config = $this->getConfig($configDefaults);
         if (!isset($config['model'])) {
             throw new InvalidStateException('Model is not defined.');
@@ -30,6 +33,10 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension {
                 $repositories = array_merge($repositories, $this->getRepositoryList($model));
             }
         }
+
+        $builder->addDefinition($this->prefix('tableFactory'))
+                ->setImplement(ITableFactory::class)
+                ->setFactory(Table::class);
 
         $repositoriesConfig = Model::getConfiguration($repositories);
 

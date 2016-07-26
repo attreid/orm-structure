@@ -4,7 +4,7 @@ namespace NAttreid\Orm\Structure;
 
 use Nextras\Dbal\Connection,
     Nextras\Dbal\Result\Row,
-    Nette\Caching\Cache,
+    Nette\DI\Container,
     NAttreid\Orm\Mapper;
 
 /**
@@ -20,8 +20,8 @@ class Table {
     /** @var Connection */
     private $connection;
 
-    /** @var Cache */
-    private $cache;
+    /** @var Container */
+    private $container;
 
     /** @var string */
     private $engine = 'InnoDB';
@@ -56,11 +56,11 @@ class Table {
     /** @var string */
     private $prefix;
 
-    public function __construct($name, $prefix, Connection $connection, Cache $cache) {
+    public function __construct($name, $prefix, Connection $connection, Container $container) {
         $this->name = $name;
         $this->prefix = $prefix;
         $this->connection = $connection;
-        $this->cache = $cache;
+        $this->container = $container;
     }
 
     /**
@@ -99,25 +99,8 @@ class Table {
      * @return self
      */
     public function createRelationTable($table, $table2) {
-        if ($table instanceof Table) {
-            $tableName = $table->name;
-        } elseif (is_subclass_of($table, Mapper::class)) {
-            /* @var $mapper Mapper */
-            $mapper = new $table($this->connection, $this->cache);
-            $tableName = $mapper->getTableName();
-        } else {
-            throw new \InvalidArgumentException;
-        }
-
-        if ($table2 instanceof Table) {
-            $tableName2 = $table2->name;
-        } elseif (is_subclass_of($table2, Mapper::class)) {
-            /* @var $mapper2 Mapper */
-            $mapper2 = new $table2($this->connection, $this->cache);
-            $tableName2 = $mapper2->getTableName();
-        } else {
-            throw new \InvalidArgumentException;
-        }
+        list($tableName) = $this->getTableData($table);
+        list($tableName2) = $this->getTableData($table2);
 
         $name = $tableName . '_x_' . $tableName2;
 
@@ -298,17 +281,7 @@ class Table {
 
         $this->setKey($name);
 
-        if ($mapperClass instanceof Table) {
-            $tableName = $mapperClass->name;
-            $tableKey = $mapperClass->getPrimaryKey()[0];
-        } elseif (is_subclass_of($mapperClass, Mapper::class)) {
-            /* @var $mapper Mapper */
-            $mapper = new $mapperClass($this->connection, $this->cache);
-            $tableName = $mapper->getTableName();
-            $tableKey = $this->connection->query('SHOW INDEX FROM ' . $tableName . ' WHERE Key_name = %s ', 'PRIMARY')->fetch()->Column_name;
-        } else {
-            throw new \InvalidArgumentException;
-        }
+        list($tableName, $tableKey) = $this->getTableData($mapperClass);
 
         $foreignName = 'fk_' . $this->name . '_' . $name . '_' . $tableName . '_' . $tableKey;
 
@@ -366,6 +339,31 @@ class Table {
     public function setAutoIncrement($first) {
         $this->autoIncrement = $first;
         return $this;
+    }
+
+    /**
+     * Vrati nazev tabulky a jeji klic
+     * @param Table|Mapper $table
+     * @return array[name, primaryKey]
+     * @throws \InvalidArgumentException
+     */
+    private function getTableData($table) {
+        if ($table instanceof Table) {
+            return [
+                $table->name,
+                $table->getPrimaryKey()[0]
+            ];
+        } elseif (is_subclass_of($table, Mapper::class)) {
+            /* @var $mapper Mapper */
+            $mapper = $this->container->getByType($table);
+            $name = $mapper->getTableName();
+            return [
+                $name,
+                $this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s ', $name, 'PRIMARY')->fetch()->Column_name
+            ];
+        } else {
+            throw new \InvalidArgumentException;
+        }
     }
 
     /**
@@ -438,4 +436,10 @@ class Table {
                 . $autoIncrement;
     }
 
+}
+
+interface ITableFactory {
+
+    /** @return Table */
+    public function create($name, $prefix);
 }

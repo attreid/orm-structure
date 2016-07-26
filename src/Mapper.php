@@ -6,7 +6,8 @@ use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection,
     Nette\Caching\Cache,
     NAttreid\Orm\Structure\Table,
     Nextras\Dbal\Connection,
-    Nextras\Dbal\QueryBuilder\QueryBuilder;
+    Nextras\Dbal\QueryBuilder\QueryBuilder,
+    NAttreid\Orm\Structure\ITableFactory;
 
 /**
  * Mapper
@@ -17,9 +18,13 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
 
     const TAG_MODEL = 'mapper/model';
 
-    public function __construct(Connection $connection, Cache $cache) {
+    /** @var ITableFactory */
+    private $tableFactory;
+
+    public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory) {
         parent::__construct($connection, $cache);
-        $this->checkTable($cache);
+        $this->tableFactory = $tableFactory;
+        $this->checkTable();
     }
 
     /** @inheritdoc */
@@ -48,12 +53,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
         return '';
     }
 
-    private function checkTable($cache) {
+    private function checkTable() {
         $key = $this->getTableName() . 'Generator';
         $result = $this->cache->load($key);
         if ($result === NULL) {
-            $result = $this->cache->save($key, function() use ($cache) {
-                $table = new Table($this->getTableName(), $this->getTablePrefix(), $this->connection, $cache);
+            $result = $this->cache->save($key, function() {
+                $table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
                 $this->createTable($table);
 
                 if ($table->check()) {
