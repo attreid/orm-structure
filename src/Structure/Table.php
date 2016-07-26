@@ -23,6 +23,9 @@ class Table {
     /** @var Container */
     private $container;
 
+    /** @var ITableFactory */
+    private $tableFactory;
+
     /** @var string */
     private $engine = 'InnoDB';
 
@@ -56,11 +59,12 @@ class Table {
     /** @var string */
     private $prefix;
 
-    public function __construct($name, $prefix, Connection $connection, Container $container) {
+    public function __construct($name, $prefix, Connection $connection, Container $container, ITableFactory $tableFactory) {
         $this->name = $name;
         $this->prefix = $prefix;
         $this->connection = $connection;
         $this->container = $container;
+        $this->tableFactory = $tableFactory;
     }
 
     /**
@@ -104,7 +108,7 @@ class Table {
 
         $name = $tableName . '_x_' . $tableName2;
 
-        return $this->relationTables[] = new Table($name, $this->prefix, $this->connection, $this->cache);
+        return $this->relationTables[] = $this->tableFactory->create($name, $this->prefix);
     }
 
     /**
