@@ -5,7 +5,8 @@ namespace Nattreid\Orm\DI;
 use Nextras\Orm\Entity\Reflection\MetadataParserFactory,
     Nextras\Orm\InvalidStateException,
     Nextras\Orm\Model\Model,
-    NAttreid\Orm\Structure\Table;
+    NAttreid\Orm\Structure\Table,
+    NAttreid\Orm\Structure\ITableFactory;
 
 /**
  * Rozsireni orm
