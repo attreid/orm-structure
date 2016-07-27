@@ -54,7 +54,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
      * @param QueryBuilder $builder
      * @return IEntity
      */
-    protected function get(QueryBuilder $builder) {
+    protected function fetch(QueryBuilder $builder) {
         return $this->toCollection($builder)->fetch();
     }
 
@@ -73,7 +73,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
      * @return IEntity
      */
     public function getByHash($column, $hash) {
-        return $this->get($this->hasher->hashSQL($this->builder(), $column, $hash));
+        return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
     }
 
     private function checkTable() {
