@@ -7,7 +7,9 @@ use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection,
     NAttreid\Orm\Structure\Table,
     Nextras\Dbal\Connection,
     Nextras\Dbal\QueryBuilder\QueryBuilder,
-    NAttreid\Orm\Structure\ITableFactory;
+    NAttreid\Orm\Structure\ITableFactory,
+    NAttreid\Utils\Hasher,
+    Nextras\Orm\Entity\IEntity;
 
 /**
  * Mapper
@@ -16,14 +18,16 @@ use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection,
  */
 abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
 
-    const TAG_MODEL = 'mapper/model';
-
     /** @var ITableFactory */
     private $tableFactory;
 
-    public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory) {
+    /** @var Hasher */
+    private $hasher;
+
+    public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher) {
         parent::__construct($connection, $cache);
         $this->tableFactory = $tableFactory;
+        $this->hasher = $hasher;
         $this->checkTable();
     }
 
@@ -46,11 +50,30 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
     }
 
     /**
+     * Vrati entitu dotazu
+     * @param QueryBuilder $builder
+     * @return IEntity
+     */
+    protected function get(QueryBuilder $builder) {
+        return $this->toCollection($builder)->fetch();
+    }
+
+    /**
      * Vrati predponu nazvu tabulky
      * @return string
      */
     public function getTablePrefix() {
         return '';
+    }
+
+    /**
+     * Vrati radek podle hash sloupce
+     * @param string $column
+     * @param string $hash
+     * @return IEntity
+     */
+    public function getByHash($column, $hash) {
+        return $this->get($this->hasher->hashSQL($this->builder(), $column, $hash));
     }
 
     private function checkTable() {
