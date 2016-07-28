@@ -99,14 +99,13 @@ class Table {
 
     /**
      * Vytvori spojovou tabulku
-     * @param string $name
+     * @param string $table
      * @return self
      */
-    public function createRelationTable($table, $table2) {
+    public function createRelationTable($table) {
         list($tableName) = $this->getTableData($table);
-        list($tableName2) = $this->getTableData($table2);
 
-        $name = $tableName . '_x_' . $tableName2;
+        $name = $this->name . '_x_' . $tableName;
 
         return $this->relationTables[] = $this->tableFactory->create($name, $this->prefix);
     }
