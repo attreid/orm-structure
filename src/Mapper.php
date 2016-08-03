@@ -24,7 +24,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
     /** @var Hasher */
     private $hasher;
 
-    public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher) {
+    public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = NULL) {
         parent::__construct($connection, $cache);
         $this->tableFactory = $tableFactory;
         $this->hasher = $hasher;
@@ -73,6 +73,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
      * @return IEntity
      */
     public function getByHash($column, $hash) {
+        if ($this->hasher === NULL) {
+            throw new \Nette\DI\MissingServiceException('Hasher is missing');
+        }
         return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
     }
 
