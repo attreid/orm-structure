@@ -123,4 +123,31 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
         $this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
     }
 
+    /**
+     * Zmeni razeni
+     * @param string $column
+     * @param mixed $id
+     * @param mixed $prevId
+     * @param mixed $nextId
+     */
+    public function changeSort($column, $id, $prevId, $nextId) {
+        $repo = $this->getRepository();
+        $entity = $repo->getById($id);
+        $prevEntity = $repo->getById($prevId);
+        $nextEntity = $repo->getById($nextId);
+
+        if ($nextEntity !== NULL && $entity->$column > $nextEntity->$column) {
+            $this->connection->transactional(function(Connection $connection) use ($column, $entity, $nextEntity) {
+                $connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
+            });
+            $entity->$column = $nextEntity->$column;
+        } else {
+            $this->connection->transactional(function(Connection $connection) use ($column, $entity, $prevEntity) {
+                $connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
+            });
+            $entity->$column = $prevEntity->$column;
+        }
+        $repo->persistAndFlush($entity);
+    }
+
 }
