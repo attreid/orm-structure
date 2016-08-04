@@ -9,6 +9,15 @@ namespace NAttreid\Orm;
  */
 abstract class Repository extends \Nextras\Orm\Repository\Repository {
 
+    public function __construct(\Nextras\Orm\Mapper\IMapper $mapper, \Nextras\Orm\Repository\IDependencyProvider $dependencyProvider = null) {
+        parent::__construct($mapper, $dependencyProvider);
+        $this->init();
+    }
+
+    protected function init() {
+        
+    }
+
     /**
      * Vrati pole [id, name] serazene podle [name]
      * @return array
