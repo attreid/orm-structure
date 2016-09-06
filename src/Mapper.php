@@ -2,152 +2,165 @@
 
 namespace NAttreid\Orm;
 
-use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection,
-    Nette\Caching\Cache,
-    NAttreid\Orm\Structure\Table,
-    Nextras\Dbal\Connection,
-    Nextras\Dbal\QueryBuilder\QueryBuilder,
-    NAttreid\Orm\Structure\ITableFactory,
-    NAttreid\Utils\Hasher,
-    Nextras\Orm\Entity\IEntity;
+use NAttreid\Orm\Structure\ITableFactory;
+use NAttreid\Orm\Structure\Table;
+use NAttreid\Utils\Hasher;
+use Nette\Caching\Cache;
+use Nextras\Dbal\Connection;
+use Nextras\Dbal\QueryBuilder\QueryBuilder;
+use Nextras\Dbal\Result\Result;
+use Nextras\Orm\Entity\IEntity;
+use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
 
 /**
  * Mapper
  *
  * @author Attreid <attreid@gmail.com>
  */
-abstract class Mapper extends \Nextras\Orm\Mapper\Mapper {
+abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
+{
 
-    /** @var ITableFactory */
-    private $tableFactory;
+	/** @var ITableFactory */
+	private $tableFactory;
 
-    /** @var Hasher */
-    private $hasher;
+	/** @var Hasher */
+	private $hasher;
 
-    public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = NULL) {
-        parent::__construct($connection, $cache);
-        $this->tableFactory = $tableFactory;
-        $this->hasher = $hasher;
-        $this->checkTable();
-    }
+	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = NULL)
+	{
+		parent::__construct($connection, $cache);
+		$this->tableFactory = $tableFactory;
+		$this->hasher = $hasher;
+		$this->checkTable();
+	}
 
-    /** @inheritdoc */
-    public function getTableName() {
-        if (!$this->tableName) {
-            $this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
-        }
+	/** @inheritdoc */
+	public function getTableName()
+	{
+		if (!$this->tableName) {
+			$this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
+		}
 
-        return $this->getTablePrefix() . $this->tableName;
-    }
+		return $this->getTablePrefix() . $this->tableName;
+	}
 
-    /**
-     * Vrati vysledek dotazu
-     * @param QueryBuilder $builder
-     * @return Result | NULL
-     */
-    protected function execute(QueryBuilder $builder) {
-        return $this->connection->queryArgs($builder->getQuerySql(), $builder->getQueryParameters());
-    }
+	/**
+	 * Vrati vysledek dotazu
+	 * @param QueryBuilder $builder
+	 * @return Result | NULL
+	 */
+	protected function execute(QueryBuilder $builder)
+	{
+		return $this->connection->queryArgs($builder->getQuerySql(), $builder->getQueryParameters());
+	}
 
-    /**
-     * Vrati entitu dotazu
-     * @param QueryBuilder $builder
-     * @return IEntity
-     */
-    protected function fetch(QueryBuilder $builder) {
-        return $this->toCollection($builder)->fetch();
-    }
+	/**
+	 * Vrati entitu dotazu
+	 * @param QueryBuilder $builder
+	 * @return IEntity
+	 */
+	protected function fetch(QueryBuilder $builder)
+	{
+		return $this->toCollection($builder)->fetch();
+	}
 
-    /**
-     * Vrati predponu nazvu tabulky
-     * @return string
-     */
-    public function getTablePrefix() {
-        return '';
-    }
+	/**
+	 * Vrati predponu nazvu tabulky
+	 * @return string
+	 */
+	public function getTablePrefix()
+	{
+		return '';
+	}
 
-    /**
-     * Vrati radek podle hash sloupce
-     * @param string $column
-     * @param string $hash
-     * @return IEntity
-     */
-    public function getByHash($column, $hash) {
-        if ($this->hasher === NULL) {
-            throw new \Nette\DI\MissingServiceException('Hasher is missing');
-        }
-        return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
-    }
+	/**
+	 * Vrati radek podle hash sloupce
+	 * @param string $column
+	 * @param string $hash
+	 * @return IEntity
+	 */
+	public function getByHash($column, $hash)
+	{
+		if ($this->hasher === NULL) {
+			throw new \Nette\DI\MissingServiceException('Hasher is missing');
+		}
+		return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
+	}
 
-    private function checkTable() {
-        $key = $this->getTableName() . 'Generator';
-        $result = $this->cache->load($key);
-        if ($result === NULL) {
-            $result = $this->cache->save($key, function() {
-                $table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
-                $this->createTable($table);
+	private function checkTable()
+	{
+		$key = $this->getTableName() . 'Generator';
+		$result = $this->cache->load($key);
+		if ($result === NULL) {
+			$this->cache->save($key, function () {
+				$table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
+				$this->createTable($table);
 
-                if ($table->check()) {
-                    $this->loadDefaultData();
-                }
-                return TRUE;
-            });
-        }
-    }
+				if ($table->check()) {
+					$this->loadDefaultData();
+				}
+				return TRUE;
+			});
+		}
+	}
 
-    /**
-     * Nastavi strukturu tabulky
-     * @param Table $table
-     */
-    abstract protected function createTable(Table $table);
+	/**
+	 * Nastavi strukturu tabulky
+	 * @param Table $table
+	 */
+	abstract protected function createTable(Table $table);
 
-    /**
-     * Nacteni vychozich dat do tabulky po vytvoreni
-     */
-    protected function loadDefaultData() {
-        
-    }
+	/**
+	 * Nacteni vychozich dat do tabulky po vytvoreni
+	 */
+	protected function loadDefaultData()
+	{
 
-    /** @inheritdoc */
-    protected function createStorageReflection() {
-        return new CamelCaseStorageReflection(
-                $this->connection, $this->getTableName(), $this->getRepository()->getEntityMetadata()->getPrimaryKey(), $this->cache
-        );
-    }
+	}
 
-    /**
-     * INSERT
-     * @param array $data
-     */
-    protected function insert(array $data) {
-        $this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
-    }
+	/** @inheritdoc */
+	protected function createStorageReflection()
+	{
+		return new CamelCaseStorageReflection(
+			$this->connection, $this->getTableName(), $this->getRepository()->getEntityMetadata()->getPrimaryKey(), $this->cache
+		);
+	}
 
-    /**
-     * Zmeni razeni
-     * @param string $column
-     * @param mixed $id
-     * @param mixed $prevId
-     * @param mixed $nextId
-     */
-    public function changeSort($column, $id, $prevId, $nextId) {
-        $repo = $this->getRepository();
-        $entity = $repo->getById($id);
-        $prevEntity = $repo->getById($prevId);
-        $nextEntity = $repo->getById($nextId);
+	/**
+	 * INSERT
+	 * @param array $data
+	 */
+	protected function insert(array $data)
+	{
+		$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
+	}
 
-        if ($nextEntity !== NULL && $entity->$column > $nextEntity->$column) {
-            $this->connection->transactional(function(Connection $connection) use ($column, $entity, $nextEntity) {
-                $connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
-            });
-            $entity->$column = $nextEntity->$column;
-        } else {
-            $this->connection->transactional(function(Connection $connection) use ($column, $entity, $prevEntity) {
-                $connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
-            });
-            $entity->$column = $prevEntity->$column;
-        }
-        $repo->persistAndFlush($entity);
-    }
+	/**
+	 * Zmeni razeni
+	 * @param string $column
+	 * @param mixed $id
+	 * @param mixed $prevId
+	 * @param mixed $nextId
+	 */
+	public function changeSort($column, $id, $prevId, $nextId)
+	{
+		$repo = $this->getRepository();
+		$entity = $repo->getById($id);
+		$prevEntity = $repo->getById($prevId);
+		$nextEntity = $repo->getById($nextId);
+
+		if ($nextEntity !== NULL && $entity->$column > $nextEntity->$column) {
+			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
+				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
+			});
+			$entity->$column = $nextEntity->$column;
+		} else {
+			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
+				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
+			});
+			$entity->$column = $prevEntity->$column;
+		}
+		$repo->persistAndFlush($entity);
+	}
 
 }

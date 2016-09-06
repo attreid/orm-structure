@@ -2,52 +2,54 @@
 
 namespace Nattreid\Orm\DI;
 
-use Nextras\Orm\Entity\Reflection\MetadataParserFactory,
-    Nextras\Orm\InvalidStateException,
-    Nextras\Orm\Model\Model,
-    NAttreid\Orm\Structure\Table,
-    NAttreid\Orm\Structure\ITableFactory;
+use NAttreid\Orm\Structure\ITableFactory;
+use NAttreid\Orm\Structure\Table;
+use Nextras\Orm\Entity\Reflection\MetadataParserFactory;
+use Nextras\Orm\InvalidStateException;
+use Nextras\Orm\Model\Model;
 
 /**
  * Rozsireni orm
  *
  * @author Attreid <attreid@gmail.com>
  */
-class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension {
+class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
+{
 
-    public function loadConfiguration() {
-        $configDefaults = [
-            'metadataParserFactory' => MetadataParserFactory::class,
-        ];
+	public function loadConfiguration()
+	{
+		$configDefaults = [
+			'metadataParserFactory' => MetadataParserFactory::class,
+		];
 
-        $builder = $this->getContainerBuilder();
+		$builder = $this->getContainerBuilder();
 
-        $config = $this->getConfig($configDefaults);
-        if (!isset($config['model'])) {
-            throw new InvalidStateException('Model is not defined.');
-        }
+		$config = $this->getConfig($configDefaults);
+		if (!isset($config['model'])) {
+			throw new InvalidStateException('Model is not defined.');
+		}
 
-        $repositories = $this->getRepositoryList($config['model']);
+		$repositories = $this->getRepositoryList($config['model']);
 
-        if (isset($config['add'])) {
-            foreach ($config['add'] as $model) {
-                $repositories = array_merge($repositories, $this->getRepositoryList($model));
-            }
-        }
+		if (isset($config['add'])) {
+			foreach ($config['add'] as $model) {
+				$repositories = array_merge($repositories, $this->getRepositoryList($model));
+			}
+		}
 
-        $builder->addDefinition($this->prefix('tableFactory'))
-                ->setImplement(ITableFactory::class)
-                ->setFactory(Table::class);
+		$builder->addDefinition($this->prefix('tableFactory'))
+			->setImplement(ITableFactory::class)
+			->setFactory(Table::class);
 
-        $repositoriesConfig = Model::getConfiguration($repositories);
+		$repositoriesConfig = Model::getConfiguration($repositories);
 
-        $this->setupCache();
-        $this->setupDependencyProvider();
-        $this->setupMetadataParserFactory($config['metadataParserFactory']);
-        $this->setupRepositoryLoader($repositories);
-        $this->setupMetadataStorage($repositoriesConfig);
-        $this->setupRepositoriesAndMappers($repositories);
-        $this->setupModel($config['model'], $repositoriesConfig);
-    }
+		$this->setupCache();
+		$this->setupDependencyProvider();
+		$this->setupMetadataParserFactory($config['metadataParserFactory']);
+		$this->setupRepositoryLoader($repositories);
+		$this->setupMetadataStorage($repositoriesConfig);
+		$this->setupRepositoriesAndMappers($repositories);
+		$this->setupModel($config['model'], $repositoriesConfig);
+	}
 
 }
