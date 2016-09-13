@@ -154,11 +154,13 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
 			});
 			$entity->$column = $nextEntity->$column;
-		} else {
+		} elseif ($prevEntity !== NULL) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
 				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
 			});
 			$entity->$column = $prevEntity->$column;
+		} else {
+			$entity->$column = 1;
 		}
 		$repo->persistAndFlush($entity);
 	}
