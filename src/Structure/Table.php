@@ -166,11 +166,11 @@ class Table
 
 			if (isset($col[$name])) {
 				if ($this->prepareColumn($column) != (string)$col[$name]) {
-					$modify[] = $col[$name];
+					$modify[] = "[$col[$name]]";
 				}
 				unset($col[$name]);
 			} else {
-				$drop[] = $name;
+				$drop[] = "[$name]";
 			}
 		}
 		if (!empty($col)) {
@@ -178,7 +178,7 @@ class Table
 		}
 
 		// primarni klic
-		foreach ($this->connection->query('SHOW INDEX FROM ' . $this->name . ' WHERE Key_name = %s', 'PRIMARY') as $index) {
+		foreach ($this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s', $this->name, 'PRIMARY') as $index) {
 			$primKey[] = $index->Column_name;
 		}
 		$primKey = implode(', ', $primKey);
@@ -193,13 +193,13 @@ class Table
 
 		// klice
 		$keys = $this->keys;
-		foreach ($this->connection->query('SHOW INDEX FROM ' . $this->name . ' WHERE Seq_in_index = %i AND Key_name != %s', 1, 'PRIMARY') as $key) {
+		foreach ($this->connection->query('SHOW INDEX FROM %table WHERE Seq_in_index = %i AND Key_name != %s', $this->name, 1, 'PRIMARY') as $key) {
 			$name = $key->Key_name;
 
 			if (isset($keys[$name])) {
 				unset($keys[$name]);
 			} else {
-				$drop[] = 'INDEX ' . $name;
+				$drop[] = "INDEX [$name]";
 			}
 		}
 		if (!empty($keys)) {
@@ -214,7 +214,7 @@ class Table
 			if (isset($constraints[$name])) {
 				unset($constraints[$name]);
 			} else {
-				$drop[] = 'FOREIGN KEY ' . $name;
+				$drop[] = "FOREIGN KEY [$name]";
 			}
 		}
 		if (!empty($constraints)) {
@@ -223,12 +223,12 @@ class Table
 
 		// modify
 		if (!empty($modify)) {
-			$this->connection->query("ALTER TABLE $this->name MODIFY " . implode(', MODIFY ', $modify));
+			$this->connection->query("ALTER TABLE %table MODIFY " . implode(', MODIFY ', $modify),$this->name);
 		}
 
 		// drop
 		if (!empty($drop)) {
-			$this->connection->query("ALTER TABLE $this->name DROP " . implode(', DROP ', $drop));
+			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $drop),$this->name);
 		}
 
 		// add
