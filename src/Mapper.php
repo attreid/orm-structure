@@ -6,6 +6,7 @@ use NAttreid\Orm\Structure\ITableFactory;
 use NAttreid\Orm\Structure\Table;
 use NAttreid\Utils\Hasher;
 use Nette\Caching\Cache;
+use Nette\DI\MissingServiceException;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\Result\Result;
@@ -82,7 +83,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	public function getByHash($column, $hash)
 	{
 		if ($this->hasher === NULL) {
-			throw new \Nette\DI\MissingServiceException('Hasher is missing');
+			throw new MissingServiceException('Hasher is missing');
 		}
 		return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
 	}

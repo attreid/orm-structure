@@ -223,12 +223,12 @@ class Table
 
 		// modify
 		if (!empty($modify)) {
-			$this->connection->query("ALTER TABLE %table MODIFY " . implode(', MODIFY ', $modify),$this->name);
+			$this->connection->query("ALTER TABLE %table MODIFY " . implode(', MODIFY ', $modify), $this->name);
 		}
 
 		// drop
 		if (!empty($drop)) {
-			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $drop),$this->name);
+			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $drop), $this->name);
 		}
 
 		// add
@@ -318,6 +318,7 @@ class Table
 	/**
 	 * Nastavi hodnotu sloupce na unikatni
 	 * @param  mixed $key [klic, ...]
+	 * @return self
 	 */
 	public function setUnique(...$key)
 	{
@@ -343,6 +344,7 @@ class Table
 	/**
 	 * Nastavi primarni klic
 	 * @param  mixed $key [klic, ...]
+	 * @return self
 	 */
 	public function setPrimaryKey(...$key)
 	{
@@ -467,6 +469,10 @@ class Table
 interface ITableFactory
 {
 
-	/** @return Table */
+	/**
+	 * @param $name
+	 * @param $prefix
+	 * @return Table
+	 */
 	public function create($name, $prefix);
 }

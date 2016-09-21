@@ -2,6 +2,9 @@
 
 namespace NAttreid\Orm;
 
+use Nextras\Orm\Mapper\IMapper;
+use Nextras\Orm\Repository\IDependencyProvider;
+
 /**
  * Repository
  *
@@ -10,7 +13,7 @@ namespace NAttreid\Orm;
 abstract class Repository extends \Nextras\Orm\Repository\Repository
 {
 
-	public function __construct(\Nextras\Orm\Mapper\IMapper $mapper, \Nextras\Orm\Repository\IDependencyProvider $dependencyProvider = null)
+	public function __construct(IMapper $mapper, IDependencyProvider $dependencyProvider = null)
 	{
 		parent::__construct($mapper, $dependencyProvider);
 		$this->init();
