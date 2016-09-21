@@ -166,7 +166,7 @@ class Table
 
 			if (isset($col[$name])) {
 				if ($this->prepareColumn($column) != (string)$col[$name]) {
-					$modify[] = "[$col[$name]]";
+					$modify[] = "$col[$name]";
 				}
 				unset($col[$name]);
 			} else {
