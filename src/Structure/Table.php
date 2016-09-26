@@ -405,7 +405,7 @@ class Table
 				$name .= '_';
 				$key .= ',';
 			}
-			$name .= $arg;
+			$name .= "`$arg`";
 			$key .= "`$arg`";
 		}
 
