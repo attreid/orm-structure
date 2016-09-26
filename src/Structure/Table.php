@@ -405,11 +405,11 @@ class Table
 				$name .= '_';
 				$key .= ',';
 			}
-			$name .= "`$arg`";
-			$key .= "`$arg`";
+			$name .= $arg;
+			$key .= $arg;
 		}
 
-		return "KEY $name ($key)";
+		return "KEY `$name` (`$key`)";
 	}
 
 	/**
