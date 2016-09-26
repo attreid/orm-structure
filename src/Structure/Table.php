@@ -406,10 +406,10 @@ class Table
 				$key .= ',';
 			}
 			$name .= $arg;
-			$key .= $arg;
+			$key .= "`$arg`";
 		}
 
-		return "KEY `$name` (`$key`)";
+		return "KEY `$name` ($key)";
 	}
 
 	/**
