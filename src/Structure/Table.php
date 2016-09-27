@@ -6,6 +6,7 @@ use NAttreid\Orm\Mapper;
 use Nette\DI\Container;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\Result\Row;
+use Tracy\Debugger;
 
 /**
  * Tabulka
@@ -122,6 +123,7 @@ class Table
 	 */
 	public function check()
 	{
+		$this->connection->query('SET foreign_key_checks = 0');
 		$exist = $this->connection->query("SHOW TABLES LIKE %s", $this->name)->fetch();
 		if (!$exist) {
 			$this->create();
@@ -133,6 +135,7 @@ class Table
 		foreach ($this->relationTables as $table) {
 			$table->check();
 		}
+		$this->connection->query('SET foreign_key_checks = 1');
 		return $result;
 	}
 
@@ -141,15 +144,15 @@ class Table
 	 */
 	private function create()
 	{
-		$query = "CREATE TABLE IF NOT EXISTS $this->name (\n"
+		$query = "CREATE TABLE IF NOT EXISTS %table (\n"
 			. implode(",\n", $this->columns) . ",\n"
-			. (!empty($this->primaryKey) ? 'PRIMARY KEY (' . implode(',', $this->primaryKey) . ')' . (empty($this->keys) ? '' : ",\n") : '')
+			. (!empty($this->primaryKey) ? $this->preparePrimaryKey() . (empty($this->keys) ? '' : ",\n") : '')
 			. implode(",\n", $this->keys) . (empty($this->constraints) ? '' : ",\n")
 			. implode(",\n", $this->constraints)
 			. "\n) ENGINE=$this->engine" . (empty($this->autoIncrement) ? '' : " AUTO_INCREMENT=$this->autoIncrement") . " DEFAULT CHARSET=$this->charset COLLATE=$this->collate"
 			. (empty($this->addition) ? '' : "/*$this->addition*/");
 
-		$this->connection->query($query);
+		$this->connection->query($query, $this->name);
 	}
 
 	/**
@@ -181,13 +184,12 @@ class Table
 		foreach ($this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s', $this->name, 'PRIMARY') as $index) {
 			$primKey[] = $index->Column_name;
 		}
-		$primKey = implode(', ', $primKey);
-		if ((array)$primKey != $this->primaryKey) {
+		if ($primKey != $this->primaryKey) {
 			if (!empty($primKey)) {
 				$drop[] = 'PRIMARY KEY';
 			}
 			if (!empty($this->primaryKey)) {
-				$add[] = "PRIMARY KEY(" . implode(',', $this->primaryKey) . ")";
+				$add[] = $this->preparePrimaryKey();
 			}
 		}
 
@@ -233,7 +235,7 @@ class Table
 
 		// add
 		if (!empty($add)) {
-			$this->connection->query("ALTER TABLE $this->name ADD " . implode(', ADD ', $add));
+			$this->connection->query("ALTER TABLE %table ADD " . implode(', ADD ', $add), $this->name);
 		}
 	}
 
@@ -302,7 +304,7 @@ class Table
 
 		$foreignName = 'fk_' . $this->name . '_' . $name . '_' . $tableName . '_' . $tableKey;
 
-		$this->constraints[$foreignName] = "CONSTRAINT `$foreignName` FOREIGN KEY (`$name`) REFERENCES `$tableName` (`$tableKey`) ON DELETE {$this->prepareOnChange($onDelete)} ON UPDATE {$this->prepareOnChange($onUpdate)}";
+		$this->constraints[$foreignName] = "CONSTRAINT [$foreignName] FOREIGN KEY ([$name]) REFERENCES [$tableName] ([$tableKey]) ON DELETE {$this->prepareOnChange($onDelete)} ON UPDATE {$this->prepareOnChange($onUpdate)}";
 		return $column;
 	}
 
@@ -403,13 +405,13 @@ class Table
 		foreach ($args as $arg) {
 			if (!empty($key)) {
 				$name .= '_';
-				$key .= ',';
+				$key .= ', ';
 			}
 			$name .= $arg;
-			$key .= "`$arg`";
+			$key .= "[$arg]";
 		}
 
-		return "KEY `$name` ($key)";
+		return "KEY [$name] ($key)";
 	}
 
 	/**
@@ -462,6 +464,19 @@ class Table
 		. $collate
 		. $default
 		. $autoIncrement;
+	}
+
+	private function preparePrimaryKey()
+	{
+		$primaryKey = '';
+		foreach ($this->primaryKey as $key) {
+			if (!empty($primaryKey)) {
+				$primaryKey .= ', ';
+			}
+			$primaryKey .= "[$key]";
+		}
+
+		return "PRIMARY KEY($primaryKey)";
 	}
 
 }
