@@ -27,7 +27,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var Hasher */
 	private $hasher;
 
-	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = NULL)
+	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
 		parent::__construct($connection, $cache);
 		$this->tableFactory = $tableFactory;
@@ -48,7 +48,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * Vrati vysledek dotazu
 	 * @param QueryBuilder $builder
-	 * @return Result | NULL
+	 * @return Result | null
 	 */
 	protected function execute(QueryBuilder $builder)
 	{
@@ -82,7 +82,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	public function getByHash($column, $hash)
 	{
-		if ($this->hasher === NULL) {
+		if ($this->hasher === null) {
 			throw new MissingServiceException('Hasher is missing');
 		}
 		return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
@@ -92,7 +92,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	{
 		$key = $this->getTableName() . 'Generator';
 		$result = $this->cache->load($key);
-		if ($result === NULL) {
+		if ($result === null) {
 			$this->cache->save($key, function () {
 				$table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
 				$this->createTable($table);
@@ -100,7 +100,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 				if ($table->check()) {
 					$this->loadDefaultData();
 				}
-				return TRUE;
+				return true;
 			});
 		}
 	}
@@ -150,12 +150,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$prevEntity = $repo->getById($prevId);
 		$nextEntity = $repo->getById($nextId);
 
-		if ($nextEntity !== NULL && $entity->$column > $nextEntity->$column) {
+		if ($nextEntity !== null && $entity->$column > $nextEntity->$column) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
 				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
 			});
 			$entity->$column = $nextEntity->$column;
-		} elseif ($prevEntity !== NULL) {
+		} elseif ($prevEntity !== null) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
 				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
 			});

@@ -17,7 +17,7 @@ class Column
 	private $type;
 
 	/** @var string */
-	private $default = 'NOT NULL';
+	private $default = 'NOT null';
 
 	/** @var Table */
 	private $table;
@@ -147,34 +147,34 @@ class Column
 
 	/**
 	 * Nastavi typ na timestamp (pri vytvoreni se ulozi datum)
-	 * @param boolean $onUpdate TRUE = datum se zmeni pri zmene
+	 * @param boolean $onUpdate true = datum se zmeni pri zmene
 	 * @return self
 	 */
-	public function timestamp($onUpdate = FALSE)
+	public function timestamp($onUpdate = false)
 	{
 		$this->type = 'timestamp';
-		$this->default = 'NOT NULL DEFAULT CURRENT_TIMESTAMP' . ($onUpdate ? ' ON UPDATE CURRENT_TIMESTAMP' : '');
+		$this->default = 'NOT null DEFAULT CURRENT_TIMESTAMP' . ($onUpdate ? ' ON UPDATE CURRENT_TIMESTAMP' : '');
 		$this->setDefault('CURRENT_TIMESTAMP');
 		return $this;
 	}
 
 	/**
 	 * Nastavi default
-	 * @param mixed $default FALSE => NOT NULL (default), NULL => DEFAULT NULL, ostatni DEFAULT dana hodnota
+	 * @param mixed $default false => NOT null (default), null => DEFAULT null, ostatni DEFAULT dana hodnota
 	 * @param boolean $empty
 	 * @return self
 	 */
-	public function setDefault($default = FALSE, $empty = FALSE)
+	public function setDefault($default = false, $empty = false)
 	{
 		if ($this->type == 'timestamp') {
 			return $this;
 		}
-		if ($default === FALSE) {
-			$this->default = 'NOT NULL';
-		} elseif ($default === NULL) {
-			$this->default = 'DEFAULT NULL';
+		if ($default === false) {
+			$this->default = 'NOT null';
+		} elseif ($default === null) {
+			$this->default = 'DEFAULT null';
 		} else {
-			$this->default = ($empty ? '' : 'NOT NULL ') . "DEFAULT '$default'";
+			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT '$default'";
 		}
 		return $this;
 	}
@@ -184,7 +184,7 @@ class Column
 	 */
 	public function setAutoIncrement()
 	{
-		$this->default = 'NOT NULL AUTO_INCREMENT';
+		$this->default = 'NOT null AUTO_INCREMENT';
 		$this->table->setAutoIncrement(1);
 	}
 

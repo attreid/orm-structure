@@ -50,10 +50,10 @@ class Table
 	private $constraints = [];
 
 	/** @var int */
-	private $autoIncrement = NULL;
+	private $autoIncrement = null;
 
 	/** @var string */
-	private $addition = NULL;
+	private $addition = null;
 
 	/** @var Table[] */
 	private $relationTables = [];
@@ -119,7 +119,7 @@ class Table
 
 	/**
 	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
-	 * @return boolean TRUE => pokud je vytvorena, FALSE => pokud jiz existovala
+	 * @return boolean true => pokud je vytvorena, false => pokud jiz existovala
 	 */
 	public function check()
 	{
@@ -127,10 +127,10 @@ class Table
 		$exist = $this->connection->query("SHOW TABLES LIKE %s", $this->name)->fetch();
 		if (!$exist) {
 			$this->create();
-			$result = TRUE;
+			$result = true;
 		} else {
 			$this->modify();
-			$result = FALSE;
+			$result = false;
 		}
 		foreach ($this->relationTables as $table) {
 			$table->check();
@@ -283,17 +283,17 @@ class Table
 	 * Nastavi cizi klic
 	 * @param string $name
 	 * @param string|Table $mapperClass klic uz musi byt v tabulce nastaven
-	 * @param mixed $onDelete FALSE => NO ACTION, TRUE => CASCADE, NULL => SET NULL
-	 * @param mixed $onUpdate FALSE => NO ACTION, TRUE => CASCADE, NULL => SET NULL
+	 * @param mixed $onDelete false => NO ACTION, true => CASCADE, null => SET null
+	 * @param mixed $onUpdate false => NO ACTION, true => CASCADE, null => SET null
 	 * @return Column
 	 */
-	public function addForeignKey($name, $mapperClass, $onDelete = TRUE, $onUpdate = FALSE)
+	public function addForeignKey($name, $mapperClass, $onDelete = true, $onUpdate = false)
 	{
 		$column = $this->addColumn($name)
 			->int();
 
-		if ($onDelete === NULL) {
-			$column->setDefault(NULL);
+		if ($onDelete === null) {
+			$column->setDefault(null);
 		} else {
 			$column->setDefault();
 		}
@@ -421,10 +421,10 @@ class Table
 	 */
 	private function prepareOnChange($value)
 	{
-		if ($value === FALSE) {
+		if ($value === false) {
 			return 'NO ACTION';
-		} elseif ($value === NULL) {
-			return 'SET NULL';
+		} elseif ($value === null) {
+			return 'SET null';
 		} else {
 			return 'CASCADE';
 		}
@@ -439,12 +439,12 @@ class Table
 	{
 		$nullable = $row->Null === 'YES';
 
-		if ($row->Default === NULL && !$nullable) {
-			$default = ' NOT NULL';
-		} elseif ($row->Default === NULL && $nullable) {
-			$default = ' DEFAULT NULL';
+		if ($row->Default === null && !$nullable) {
+			$default = ' NOT null';
+		} elseif ($row->Default === null && $nullable) {
+			$default = ' DEFAULT null';
 		} else {
-			$default = ($nullable ? '' : ' NOT NULL') . " DEFAULT '{$row->Default}'";
+			$default = ($nullable ? '' : ' NOT null') . " DEFAULT '{$row->Default}'";
 		}
 
 		if (!empty($row->Collation)) {
