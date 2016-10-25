@@ -47,6 +47,8 @@ class ExampleRepository extends \NAttreid\Orm\Repository {
 class ExampleMapper extends \NAttreid\Orm\Mapper {
 
     protected function createTable(\NAttreid\Orm\Structure\Table $table) {
+        $table->setDefaultDataFile(__DIR__.'/import.sql');
+        
         $table->addPrimaryKey('id')
                 ->int()
                 ->setAutoIncrement();
@@ -65,15 +67,6 @@ class ExampleMapper extends \NAttreid\Orm\Mapper {
         $relationTable->addForeignKey('exampleId', $table);
         $relationTable->addForeignKey('otherId', OtherMapper::class);
         $relationTable->setPrimaryKey('exampleId', 'otherId');
-    }
-
-    protected function loadDefaultData() {
-        $this->insert([
-            'someId' => 1,
-            'parentId' => NULL,
-            'pa' => 'test',
-            'allowed' => 1
-        ]);
     }
 }
 ```
