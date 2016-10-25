@@ -6,7 +6,7 @@ use NAttreid\Orm\Mapper;
 use Nette\DI\Container;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\Result\Row;
-use Tracy\Debugger;
+use Nextras\Dbal\Utils\FileImporter;
 
 /**
  * Tabulka
@@ -61,6 +61,9 @@ class Table
 	/** @var string */
 	private $prefix;
 
+	/** @var string */
+	private $defaultDataFile;
+
 	public function __construct($name, $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
 	{
 		$this->name = $name;
@@ -104,6 +107,15 @@ class Table
 	}
 
 	/**
+	 * Nastavi soubor pro nahrani dat pri vytvareni tabulky
+	 * @param string $file
+	 */
+	public function setDefaultDataFile($file)
+	{
+		$this->defaultDataFile = $file;
+	}
+
+	/**
 	 * Vytvori spojovou tabulku
 	 * @param string $table
 	 * @return self
@@ -119,7 +131,6 @@ class Table
 
 	/**
 	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
-	 * @return boolean true => pokud je vytvorena, false => pokud jiz existovala
 	 */
 	public function check()
 	{
@@ -127,16 +138,16 @@ class Table
 		$exist = $this->connection->query("SHOW TABLES LIKE %s", $this->name)->fetch();
 		if (!$exist) {
 			$this->create();
-			$result = true;
+			if ($this->defaultDataFile !== null) {
+				FileImporter::executeFile($this->connection, $this->defaultDataFile);
+			}
 		} else {
 			$this->modify();
-			$result = false;
 		}
 		foreach ($this->relationTables as $table) {
 			$table->check();
 		}
 		$this->connection->query('SET foreign_key_checks = 1');
-		return $result;
 	}
 
 	/**

@@ -96,10 +96,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 			$this->cache->save($key, function () {
 				$table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
 				$this->createTable($table);
-
-				if ($table->check()) {
-					$this->loadDefaultData();
-				}
+				$table->check();
 				return true;
 			});
 		}
@@ -110,14 +107,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param Table $table
 	 */
 	abstract protected function createTable(Table $table);
-
-	/**
-	 * Nacteni vychozich dat do tabulky po vytvoreni
-	 */
-	protected function loadDefaultData()
-	{
-
-	}
 
 	/** @inheritdoc */
 	protected function createStorageReflection()
