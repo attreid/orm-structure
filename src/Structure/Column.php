@@ -44,7 +44,7 @@ class Column
 	 */
 	public function setUnique()
 	{
-		$this->table->setUnique($this->name);
+		$this->table->addUnique($this->name);
 		return $this;
 	}
 
@@ -54,7 +54,17 @@ class Column
 	 */
 	public function setKey()
 	{
-		$this->table->setKey($this->name);
+		$this->table->addKey($this->name);
+		return $this;
+	}
+
+	/**
+	 * Nastave jako fulltext
+	 * @return $this
+	 */
+	public function setFulltext()
+	{
+		$this->table->addFulltext($this->name);
 		return $this;
 	}
 

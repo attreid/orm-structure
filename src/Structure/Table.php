@@ -2,6 +2,7 @@
 
 namespace NAttreid\Orm\Structure;
 
+use InvalidArgumentException;
 use NAttreid\Orm\Mapper;
 use Nette\DI\Container;
 use Nextras\Dbal\Connection;
@@ -40,7 +41,7 @@ class Table
 	/** @var Column */
 	private $columns = [];
 
-	/** @var string */
+	/** @var string[] */
 	private $primaryKey = [];
 
 	/** @var string */
@@ -309,7 +310,7 @@ class Table
 			$column->setDefault();
 		}
 
-		$this->setKey($name);
+		$this->addKey($name);
 
 		list($tableName, $tableKey) = $this->getTableData($mapperClass);
 
@@ -329,40 +330,61 @@ class Table
 	}
 
 	/**
+	 * Nastavi fulltext
+	 * @param string ...$key
+	 * @return $this
+	 */
+	public function addFulltext(...$key)
+	{
+		if (count($key) > 0) {
+			$this->keys[implode('_', $key)] = 'FULLTEXT ' . $this->prepareKey($key);
+		} else {
+			throw new InvalidArgumentException();
+		}
+		return $this;
+	}
+
+	/**
 	 * Nastavi hodnotu sloupce na unikatni
-	 * @param  mixed $key [klic, ...]
+	 * @param  string ...$key
 	 * @return self
 	 */
-	public function setUnique(...$key)
+	public function addUnique(...$key)
 	{
 		if (count($key) > 0) {
 			$this->keys[implode('_', $key)] = 'UNIQUE ' . $this->prepareKey($key);
+		} else {
+			throw new InvalidArgumentException();
 		}
 		return $this;
 	}
 
 	/**
 	 * Nastavi klic
-	 * @param  mixed $key [klic, ...]
+	 * @param  string ...$key
 	 * @return self
 	 */
-	public function setKey(...$key)
+	public function addKey(...$key)
 	{
 		if (count($key) > 0) {
 			$this->keys[implode('_', $key)] = $this->prepareKey($key);
+		} else {
+			throw new InvalidArgumentException();
 		}
 		return $this;
 	}
 
 	/**
 	 * Nastavi primarni klic
-	 * @param  mixed $key [klic, ...]
+	 * @param  string ...$key
 	 * @return self
 	 */
 	public function setPrimaryKey(...$key)
 	{
 		if (count($key) > 0) {
 			$this->primaryKey = $key;
+		} else {
+			throw new InvalidArgumentException();
 		}
 		return $this;
 	}
@@ -382,7 +404,7 @@ class Table
 	 * Vrati nazev tabulky a jeji klic
 	 * @param string $table
 	 * @return array[name, primaryKey]
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	private function getTableData($table)
 	{
@@ -400,7 +422,7 @@ class Table
 				$this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s ', $name, 'PRIMARY')->fetch()->Column_name
 			];
 		} else {
-			throw new \InvalidArgumentException;
+			throw new InvalidArgumentException;
 		}
 	}
 
@@ -489,7 +511,6 @@ class Table
 
 		return "PRIMARY KEY($primaryKey)";
 	}
-
 }
 
 interface ITableFactory
