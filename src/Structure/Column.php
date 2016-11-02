@@ -80,6 +80,17 @@ class Column
 	}
 
 	/**
+	 * Nastavi typ na bigint
+	 * @param int $size
+	 * @return self
+	 */
+	public function bigint($size = 15)
+	{
+		$this->type = 'bigint(' . (int)$size . ')';
+		return $this;
+	}
+
+	/**
 	 * Nastavi typ na decimal
 	 * @param int $total
 	 * @param int $decimal
