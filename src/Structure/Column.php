@@ -1,6 +1,7 @@
 <?php
 
 namespace NAttreid\Orm\Structure;
+use Nextras\Orm\InvalidStateException;
 
 /**
  * Sloupec
@@ -195,7 +196,7 @@ class Column
 		} elseif ($default === null) {
 			$this->default = 'DEFAULT null';
 		} else {
-			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT '$default'";
+			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT '{$this->table->escapeString($default)}'";
 		}
 		return $this;
 	}
@@ -221,6 +222,9 @@ class Column
 
 	public function __toString()
 	{
-		return "`$this->name` $this->type $this->default";
+		if ($this->type === null) {
+			throw new InvalidStateException('Type is not set');
+		}
+		return "[$this->name] $this->type $this->default";
 	}
 }

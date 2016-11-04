@@ -253,6 +253,15 @@ class Table implements Serializable
 	}
 
 	/**
+	 * @param string $value
+	 * @return string
+	 */
+	public function escapeString($value)
+	{
+		return "'" . $this->connection->getDriver()->convertStringToSql((string)$value) . "'";
+	}
+
+	/**
 	 * Vrati primarni klic
 	 * @return string
 	 */
