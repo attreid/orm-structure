@@ -523,15 +523,10 @@ class Table implements Serializable
 		return "PRIMARY KEY($primaryKey)";
 	}
 
-	/**
-	 * String representation of object
-	 * @link http://php.net/manual/en/serializable.serialize.php
-	 * @return string the string representation of the object or null
-	 * @since 5.1.0
-	 */
 	public function serialize()
 	{
 		$unserialized = [
+			'name' => $this->name,
 			'engine' => $this->engine,
 			'charset' => $this->charset,
 			'collate' => $this->collate,
@@ -548,19 +543,11 @@ class Table implements Serializable
 		return serialize($unserialized);
 	}
 
-	/**
-	 * Constructs the object
-	 * @link http://php.net/manual/en/serializable.unserialize.php
-	 * @param string $serialized <p>
-	 * The string representation of the object.
-	 * </p>
-	 * @return void
-	 * @since 5.1.0
-	 */
 	public function unserialize($serialized)
 	{
 		$unserialized = unserialize($serialized);
 
+		$this->name = $unserialized['name'];
 		$this->engine = $unserialized['engine'];
 		$this->charset = $unserialized['charset'];
 		$this->collate = $unserialized['collate'];
