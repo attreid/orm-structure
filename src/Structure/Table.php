@@ -8,13 +8,14 @@ use Nette\DI\Container;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\Result\Row;
 use Nextras\Dbal\Utils\FileImporter;
+use Serializable;
 
 /**
  * Tabulka
  *
  * @author Attreid <attreid@gmail.com>
  */
-class Table
+class Table implements Serializable
 {
 
 	/** @var string */
@@ -38,16 +39,16 @@ class Table
 	/** @var string */
 	public $collate = 'utf8_czech_ci';
 
-	/** @var Column */
+	/** @var Column[] */
 	private $columns = [];
 
 	/** @var string[] */
 	private $primaryKey = [];
 
-	/** @var string */
+	/** @var string[] */
 	private $keys = [];
 
-	/** @var string */
+	/** @var string[] */
 	private $constraints = [];
 
 	/** @var int */
@@ -65,7 +66,7 @@ class Table
 	/** @var string */
 	private $defaultDataFile;
 
-	public function __construct($name, $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
+	public function __construct($name, $prefix, Connection $connection = null, Container $container = null, ITableFactory $tableFactory = null)
 	{
 		$this->name = $name;
 		$this->prefix = $prefix;
@@ -118,14 +119,14 @@ class Table
 
 	/**
 	 * Vytvori spojovou tabulku
-	 * @param string $table
+	 * @param string $tableName
 	 * @return self
 	 */
-	public function createRelationTable($table)
+	public function createRelationTable($tableName)
 	{
-		list($tableName) = $this->getTableData($table);
+		$table = $this->getTableData($tableName);
 
-		$name = $this->name . '_x_' . $tableName;
+		$name = $this->name . '_x_' . $table->name;
 
 		return $this->relationTables[] = $this->tableFactory->create($name, $this->prefix);
 	}
@@ -253,11 +254,11 @@ class Table
 
 	/**
 	 * Vrati primarni klic
-	 * @return array
+	 * @return string
 	 */
 	public function getPrimaryKey()
 	{
-		return $this->primaryKey;
+		return $this->primaryKey[0];
 	}
 
 	/**
@@ -301,8 +302,10 @@ class Table
 	 */
 	public function addForeignKey($name, $mapperClass, $onDelete = true, $onUpdate = false)
 	{
+		$table = $this->getTableData($mapperClass);
+
 		$column = $this->addColumn($name)
-			->int();
+			->setType($table->getPrimaryKeyColumn());
 
 		if ($onDelete === null) {
 			$column->setDefault(null);
@@ -312,11 +315,9 @@ class Table
 
 		$this->addKey($name);
 
-		list($tableName, $tableKey) = $this->getTableData($mapperClass);
+		$foreignName = 'fk_' . $this->name . '_' . $name . '_' . $table->name . '_' . $table->getPrimaryKey();
 
-		$foreignName = 'fk_' . $this->name . '_' . $name . '_' . $tableName . '_' . $tableKey;
-
-		$this->constraints[$foreignName] = "CONSTRAINT [$foreignName] FOREIGN KEY ([$name]) REFERENCES [$tableName] ([$tableKey]) ON DELETE {$this->prepareOnChange($onDelete)} ON UPDATE {$this->prepareOnChange($onUpdate)}";
+		$this->constraints[$foreignName] = "CONSTRAINT [$foreignName] FOREIGN KEY ([$name]) REFERENCES [$table->name] ([{$table->getPrimaryKey()}]) ON DELETE {$this->prepareOnChange($onDelete)} ON UPDATE {$this->prepareOnChange($onUpdate)}";
 		return $column;
 	}
 
@@ -402,25 +403,18 @@ class Table
 
 	/**
 	 * Vrati nazev tabulky a jeji klic
-	 * @param string $table
-	 * @return array[name, primaryKey]
+	 * @param string|Table $table
+	 * @return Table
 	 * @throws InvalidArgumentException
 	 */
 	private function getTableData($table)
 	{
 		if ($table instanceof Table) {
-			return [
-				$table->name,
-				$table->getPrimaryKey()[0]
-			];
+			return $table;
 		} elseif (is_subclass_of($table, Mapper::class)) {
 			/* @var $mapper Mapper */
 			$mapper = $this->container->getByType($table);
-			$name = $mapper->getTableName();
-			return [
-				$name,
-				$this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s ', $name, 'PRIMARY')->fetch()->Column_name
-			];
+			return $mapper->getStructure();
 		} else {
 			throw new InvalidArgumentException;
 		}
@@ -445,6 +439,14 @@ class Table
 		}
 
 		return "KEY [$name] ($key)";
+	}
+
+	/**
+	 * @return Column
+	 */
+	private function getPrimaryKeyColumn()
+	{
+		return $this->columns[$this->getPrimaryKey()];
 	}
 
 	/**
@@ -510,6 +512,58 @@ class Table
 		}
 
 		return "PRIMARY KEY($primaryKey)";
+	}
+
+	/**
+	 * String representation of object
+	 * @link http://php.net/manual/en/serializable.serialize.php
+	 * @return string the string representation of the object or null
+	 * @since 5.1.0
+	 */
+	public function serialize()
+	{
+		$unserialized = [
+			'engine' => $this->engine,
+			'charset' => $this->charset,
+			'collate' => $this->collate,
+			'columns' => serialize($this->columns),
+			'primaryKey' => $this->primaryKey,
+			'keys' => $this->keys,
+			'constraints' => $this->constraints,
+			'autoIncrement' => $this->autoIncrement,
+			'addition' => $this->addition,
+			'relationTables' => serialize($this->relationTables),
+			'prefix' => $this->prefix,
+			'defaultDataFile' => $this->defaultDataFile
+		];
+		return serialize($unserialized);
+	}
+
+	/**
+	 * Constructs the object
+	 * @link http://php.net/manual/en/serializable.unserialize.php
+	 * @param string $serialized <p>
+	 * The string representation of the object.
+	 * </p>
+	 * @return void
+	 * @since 5.1.0
+	 */
+	public function unserialize($serialized)
+	{
+		$unserialized = unserialize($serialized);
+
+		$this->engine = $unserialized['engine'];
+		$this->charset = $unserialized['charset'];
+		$this->collate = $unserialized['collate'];
+		$this->columns = unserialize($unserialized['columns']);
+		$this->primaryKey = $unserialized['primaryKey'];
+		$this->keys = $unserialized['keys'];
+		$this->constraints = $unserialized['constraints'];
+		$this->autoIncrement = $unserialized['autoIncrement'];
+		$this->addition = $unserialized['addition'];
+		$this->relationTables = unserialize($unserialized['relationTables']);
+		$this->prefix = $unserialized['prefix'];
+		$this->defaultDataFile = $unserialized['defaultDataFile'];
 	}
 }
 

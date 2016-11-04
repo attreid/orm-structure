@@ -209,9 +209,18 @@ class Column
 		$this->table->setAutoIncrement(1);
 	}
 
+	/**
+	 * @param Column $column
+	 * @return $this
+	 */
+	public function setType(Column $column)
+	{
+		$this->type = $column->type;
+		return $this;
+	}
+
 	public function __toString()
 	{
 		return "`$this->name` $this->type $this->default";
 	}
-
 }

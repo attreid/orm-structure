@@ -27,12 +27,15 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var Hasher */
 	private $hasher;
 
+	/** @var Table */
+	private $table;
+
 	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
 		parent::__construct($connection, $cache);
 		$this->tableFactory = $tableFactory;
 		$this->hasher = $hasher;
-		$this->checkTable();
+		$this->table = $this->checkTable();
 	}
 
 	/** @inheritdoc */
@@ -43,6 +46,14 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		}
 
 		return $this->getTablePrefix() . $this->tableName;
+	}
+
+	/**
+	 * @return Table
+	 */
+	public function getStructure()
+	{
+		return $this->table;
 	}
 
 	/**
@@ -88,18 +99,22 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
 	}
 
+	/**
+	 * @return Table
+	 */
 	private function checkTable()
 	{
-		$key = $this->getTableName() . 'Generator';
+		$key = $this->getTableName() . 'Structure';
 		$result = $this->cache->load($key);
 		if ($result === null) {
-			$this->cache->save($key, function () {
+			$result = $this->cache->save($key, function () {
 				$table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
 				$this->createTable($table);
 				$table->check();
-				return true;
+				return $table;
 			});
 		}
+		return $result;
 	}
 
 	/**
