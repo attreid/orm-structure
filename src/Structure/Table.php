@@ -258,7 +258,7 @@ class Table implements Serializable
 	 */
 	public function escapeString($value)
 	{
-		return "'" . $this->connection->getDriver()->convertStringToSql((string)$value) . "'";
+		return $this->connection->getDriver()->convertStringToSql((string)$value);
 	}
 
 	/**

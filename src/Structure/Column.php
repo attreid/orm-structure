@@ -196,7 +196,7 @@ class Column
 		} elseif ($default === null) {
 			$this->default = 'DEFAULT null';
 		} else {
-			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT '{$this->table->escapeString($default)}'";
+			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT {$this->table->escapeString($default)}";
 		}
 		return $this;
 	}
