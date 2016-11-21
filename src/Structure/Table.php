@@ -9,7 +9,6 @@ use Nextras\Dbal\Connection;
 use Nextras\Dbal\Result\Row;
 use Nextras\Dbal\Utils\FileImporter;
 use Serializable;
-use Tracy\Debugger;
 
 /**
  * Tabulka
