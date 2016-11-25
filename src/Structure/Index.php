@@ -74,7 +74,7 @@ class Index
 	 */
 	public function equals($row)
 	{
-		$columns = ksort($row->columns);
+		ksort($row->columns);
 		$prefix = null;
 		if ($row->unique) {
 			$prefix = self::UNIQUE;
@@ -84,7 +84,7 @@ class Index
 
 		$key = $this->prepare(
 			$row->name,
-			$columns,
+			$row->columns,
 			$prefix
 		);
 		return $key == $this->__toString();
@@ -106,7 +106,7 @@ class Index
 	{
 		return $this->prepare(
 			$this->name,
-			$this->key,
+			$this->keys,
 			$this->prefix
 		);
 	}

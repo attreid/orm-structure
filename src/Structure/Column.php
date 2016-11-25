@@ -20,7 +20,7 @@ class Column
 	private $type;
 
 	/** @var string */
-	private $default = 'NOT NULL';
+	private $default = 'NOT null';
 
 	/** @var Table */
 	private $table;
@@ -213,7 +213,7 @@ class Column
 	public function timestamp($onUpdate = false)
 	{
 		$this->type = 'timestamp';
-		$this->default = 'NOT NULL DEFAULT CURRENT_TIMESTAMP' . ($onUpdate ? ' ON UPDATE CURRENT_TIMESTAMP' : '');
+		$this->default = 'NOT null DEFAULT CURRENT_TIMESTAMP' . ($onUpdate ? ' ON UPDATE CURRENT_TIMESTAMP' : '');
 		$this->setDefault('CURRENT_TIMESTAMP');
 		return $this;
 	}
@@ -230,11 +230,11 @@ class Column
 			return $this;
 		}
 		if ($default === false) {
-			$this->default = 'NOT NULL';
+			$this->default = 'NOT null';
 		} elseif ($default === null) {
-			$this->default = 'DEFAULT NULL';
+			$this->default = 'DEFAULT null';
 		} else {
-			$this->default = ($empty ? '' : 'NOT NULL ') . "DEFAULT {$this->table->escapeString($default)}";
+			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT {$this->table->escapeString($default)}";
 		}
 		return $this;
 	}
@@ -244,7 +244,7 @@ class Column
 	 */
 	public function setAutoIncrement()
 	{
-		$this->default = 'NOT NULL AUTO_INCREMENT';
+		$this->default = 'NOT null AUTO_INCREMENT';
 		$this->table->setAutoIncrement(1);
 	}
 

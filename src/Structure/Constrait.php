@@ -49,7 +49,7 @@ class Constrait
 	public function __construct($key, Table $table, Table $referenceTable, $onDelete = true, $onUpdate = false)
 	{
 		$column = $table->addColumn($key)
-			->setType($table->primaryKey->column);
+			->setType($referenceTable->primaryKey->column);
 
 		if ($onDelete === null) {
 			$column->setDefault(null);

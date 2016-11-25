@@ -34,6 +34,15 @@ class PrimaryKey
 	}
 
 	/**
+	 * @param array $keys
+	 * @return boolean
+	 */
+	public function equals(array $keys)
+	{
+		return $this->keys === $keys;
+	}
+
+	/**
 	 * @return string
 	 */
 	protected function getName()

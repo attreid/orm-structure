@@ -229,7 +229,8 @@ class Table implements Serializable
 		foreach ($this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s', $this->name, 'PRIMARY') as $index) {
 			$primKey[] = $index->Column_name;
 		}
-		if ($primKey != $this->primaryKey->name) {
+
+		if (!$this->primaryKey->equals($primKey)) {
 			if (!empty($primKey)) {
 				$drop[] = 'PRIMARY KEY';
 			}
@@ -370,7 +371,7 @@ class Table implements Serializable
 	 */
 	public function addFulltext(...$name)
 	{
-		$key = new Index($name);
+		$key = new Index(...$name);
 		$key->setFulltext();
 		$this->keys[$key->name] = $key;
 		return $this;
@@ -383,7 +384,7 @@ class Table implements Serializable
 	 */
 	public function addUnique(...$name)
 	{
-		$key = new Index($name);
+		$key = new Index(...$name);
 		$key->setUnique();
 		$this->keys[$key->name] = $key;
 		return $this;
@@ -396,7 +397,7 @@ class Table implements Serializable
 	 */
 	public function addKey(...$name)
 	{
-		$key = new Index($name);
+		$key = new Index(...$name);
 		$this->keys[$key->name] = $key;
 		return $this;
 	}
@@ -408,7 +409,7 @@ class Table implements Serializable
 	 */
 	public function setPrimaryKey(...$key)
 	{
-		$this->primaryKey = new PrimaryKey($this, $key);
+		$this->primaryKey = new PrimaryKey($this, ...$key);
 		return $this;
 	}
 
@@ -471,25 +472,25 @@ class Table implements Serializable
 		$result = [];
 		$rows = $this->connection->query("
 			SELECT 
-				Key_name,
-				Column_name,
-				Index_type,
-				Non_unique,
-				Seq_in_index
+				INDEX_NAME,
+				COLUMN_NAME,
+				INDEX_TYPE,
+				NON_UNIQUE,
+				SEQ_IN_INDEX
 			FROM information_schema.STATISTICS 
 			WHERE TABLE_NAME = %s AND INDEX_NAME != %s",
 			$this->name, 'PRIMARY');
 		foreach ($rows as $row) {
-			$name = $row->Key_name;
+			$name = $row->INDEX_NAME;
 			if (isset($result[$name])) {
 				$obj = $result[$name];
 			} else {
 				$obj = new stdClass;
 			}
-			$obj->name = $row->Key_name;
-			$obj->columns[$row->Seq_in_index] = $row->Column_name;
-			$obj->type = $row->Index_type;
-			$obj->unique = !$row->Non_unique;
+			$obj->name = $name;
+			$obj->columns[$row->SEQ_IN_INDEX] = $row->COLUMN_NAME;
+			$obj->type = $row->INDEX_TYPE;
+			$obj->unique = !$row->NON_UNIQUE;
 
 			$result[$name] = $obj;
 		}
