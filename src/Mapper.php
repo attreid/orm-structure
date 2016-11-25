@@ -59,7 +59,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * Vrati vysledek dotazu
 	 * @param QueryBuilder $builder
-	 * @return Result | null
+	 * @return Result|null
 	 */
 	protected function execute(QueryBuilder $builder)
 	{
