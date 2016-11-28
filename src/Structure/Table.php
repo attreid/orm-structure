@@ -505,9 +505,9 @@ class Table implements Serializable
 			'charset' => $this->charset,
 			'collate' => $this->collate,
 			'columns' => serialize($this->columns),
-			'primaryKey' => $this->primaryKey,
-			'keys' => $this->keys,
-			'constraints' => $this->constraints,
+			'primaryKey' => serialize($this->primaryKey),
+			'keys' => serialize($this->keys),
+			'constraints' => serialize($this->constraints),
 			'autoIncrement' => $this->autoIncrement,
 			'addition' => $this->addition,
 			'relationTables' => serialize($this->relationTables),
@@ -526,9 +526,9 @@ class Table implements Serializable
 		$this->charset = $unserialized['charset'];
 		$this->collate = $unserialized['collate'];
 		$this->columns = unserialize($unserialized['columns']);
-		$this->primaryKey = $unserialized['primaryKey'];
-		$this->keys = $unserialized['keys'];
-		$this->constraints = $unserialized['constraints'];
+		$this->primaryKey = unserialize($unserialized['primaryKey']);
+		$this->keys = unserialize($unserialized['keys']);
+		$this->constraints = unserialize($unserialized['constraints']);
 		$this->autoIncrement = $unserialized['autoIncrement'];
 		$this->addition = $unserialized['addition'];
 		$this->relationTables = unserialize($unserialized['relationTables']);
