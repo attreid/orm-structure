@@ -74,7 +74,7 @@ class Table implements Serializable
 	/** @var string */
 	private $defaultDataFile;
 
-	public function __construct($name, $prefix, Connection $connection = null, Container $container = null, ITableFactory $tableFactory = null)
+	public function __construct($name, $prefix, Connection $connection, Container $container = null, ITableFactory $tableFactory = null)
 	{
 		$this->name = $name;
 		$this->prefix = $prefix;
@@ -294,6 +294,7 @@ class Table implements Serializable
 	 */
 	public function escapeString($value)
 	{
+		$this->connection->reconnect();
 		return $this->connection->getDriver()->convertStringToSql((string)$value);
 	}
 
