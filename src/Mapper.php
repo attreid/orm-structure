@@ -170,4 +170,14 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$repo->persistAndFlush($entity);
 	}
 
+	/**
+	 * Vrati nejvetsi pozici
+	 * @param string $column
+	 * @return int
+	 */
+	public function getMaxPosition($column)
+	{
+		return $this->connection->query('SELECT IFnull(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
+	}
+
 }
