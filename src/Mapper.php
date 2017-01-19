@@ -54,6 +54,14 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$this->useCamelCase = (boolean)$use;
 	}
 
+	/**
+	 * @return bool
+	 */
+	protected function getUseCamelCase()
+	{
+		return $this->useCamelCase;
+	}
+
 	/** @inheritdoc */
 	public function getTableName()
 	{
