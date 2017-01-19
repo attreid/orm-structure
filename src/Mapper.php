@@ -146,16 +146,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @inheritdoc */
 	protected function createStorageReflection()
 	{
-		if ($this->useCamelCase) {
-			return new CamelCaseStorageReflection(
-				$this->connection,
-				$this->getTableName(),
-				$this->getRepository()->getEntityMetadata()->getPrimaryKey(),
-				$this->cache
-			);
-		} else {
-			return parent::createStorageReflection();
-		}
+		return new CamelCaseStorageReflection(
+			$this->connection,
+			$this->getTableName(),
+			$this->getRepository()->getEntityMetadata()->getPrimaryKey(),
+			$this->cache
+		);
 	}
 
 	/**
