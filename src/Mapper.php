@@ -34,6 +34,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var boolean */
 	private $useCamelCase;
 
+	/** @var callback[] */
+	protected $afterCreateTable = [];
+
 	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
 		parent::__construct($connection, $cache);
@@ -138,7 +141,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 			$result = $this->cache->save($key, function () {
 				$table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
 				$this->createTable($table);
-				$table->check();
+				$isNew = $table->check();
+				if ($isNew) {
+					foreach ($this->afterCreateTable as $callback) {
+						$callback();
+					}
+				}
 				return $table;
 			});
 		}

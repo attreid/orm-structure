@@ -165,13 +165,16 @@ class Table implements Serializable
 
 	/**
 	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
+	 * @return boolean pokud je vytvorena vrati true
 	 */
 	public function check()
 	{
+		$isNew = false;
 		$this->connection->query('SET foreign_key_checks = 0');
 		$exist = $this->connection->query("SHOW TABLES LIKE %s", $this->name)->fetch();
 		if (!$exist) {
 			$this->create();
+			$isNew = true;
 			if ($this->defaultDataFile !== null) {
 				FileImporter::executeFile($this->connection, $this->defaultDataFile);
 			}
@@ -182,6 +185,7 @@ class Table implements Serializable
 			$table->check();
 		}
 		$this->connection->query('SET foreign_key_checks = 1');
+		return $isNew;
 	}
 
 	/**
