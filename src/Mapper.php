@@ -31,15 +31,23 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	private $table;
 
 	/** @var boolean */
-	private $useCamelCase;
+	private $useCamelCase = true;
 
-	public function __construct($useCamelCase, Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
+	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
 		parent::__construct($connection, $cache);
 		$this->tableFactory = $tableFactory;
 		$this->hasher = $hasher;
 		$this->table = $this->checkTable();
-		$this->useCamelCase = $useCamelCase;
+	}
+
+	/**
+	 * Pouzivat camel case v nazvech tabulek
+	 * @param bool $use
+	 */
+	public function useCamelCase($use = true)
+	{
+		$this->useCamelCase = (boolean)$use;
 	}
 
 	/** @inheritdoc */

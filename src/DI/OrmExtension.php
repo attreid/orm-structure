@@ -67,9 +67,10 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 			$builder->addDefinition($mapperName)
 				->setClass($mapperClass)
 				->setArguments([
-					'useCamelCase' => $config['useCamelCase'],
 					'cache' => '@' . $this->prefix('cache'),
-				]);
+				])
+				->addSetup('useCamelCase', [$config['useCamelCase']]);
+
 		}
 
 		return $mapperName;
