@@ -19,7 +19,9 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 
 	private $defaults = [
 		'metadataParserFactory' => MetadataParserFactory::class,
-		'useCamelCase' => true
+		'useCamelCase' => true,
+		'model' => null,
+		'add' => []
 	];
 
 	public function loadConfiguration()
@@ -27,16 +29,13 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		$config = $this->validateConfig($this->defaults, $this->getConfig());
 
 		$builder = $this->getContainerBuilder();;
-		if (!isset($config['model'])) {
+		if ($config['model'] === null) {
 			throw new InvalidStateException('Model is not defined.');
 		}
 
 		$repositories = $this->getRepositoryList($config['model']);
-
-		if (isset($config['add'])) {
-			foreach ($config['add'] as $model) {
-				$repositories = array_merge($repositories, $this->getRepositoryList($model));
-			}
+		foreach ($config['add'] as $model) {
+			$repositories = array_merge($repositories, $this->getRepositoryList($model));
 		}
 
 		$builder->addDefinition($this->prefix('tableFactory'))
