@@ -2,9 +2,9 @@
 
 namespace Nattreid\Orm\DI;
 
+use NAttreid\Orm\MapperManager;
 use NAttreid\Orm\Structure\ITableFactory;
 use NAttreid\Orm\Structure\Table;
-use Nette\DI\ContainerBuilder;
 use Nextras\Orm\Entity\Reflection\MetadataParserFactory;
 use Nextras\Orm\InvalidStateException;
 use Nextras\Orm\Model\Model;
@@ -38,6 +38,12 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 			$repositories = array_merge($repositories, $this->getRepositoryList($model));
 		}
 
+		$builder->addDefinition($this->prefix('mapperManager'))
+			->setClass(MapperManager::class)
+			->setArguments([
+				'useCamelCase' => $config['useCamelCase']
+			]);
+
 		$builder->addDefinition($this->prefix('tableFactory'))
 			->setImplement(ITableFactory::class)
 			->setFactory(Table::class);
@@ -51,29 +57,6 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		$this->setupMetadataStorage($repositoriesConfig);
 		$this->setupRepositoriesAndMappers($repositories);
 		$this->setupModel($config['model'], $repositoriesConfig);
-	}
-
-	protected function createMapperService($repositoryName, $repositoryClass, ContainerBuilder $builder)
-	{
-		$config = $this->validateConfig($this->defaults, $this->getConfig());
-
-		$mapperName = $this->prefix('mappers.' . $repositoryName);
-		if (!$builder->hasDefinition($mapperName)) {
-			$mapperClass = str_replace('Repository', 'Mapper', $repositoryClass);
-			if (!class_exists($mapperClass)) {
-				throw new InvalidStateException("Unknown mapper for '{$repositoryName}' repository.");
-			}
-
-			$builder->addDefinition($mapperName)
-				->setClass($mapperClass)
-				->setArguments([
-					'cache' => '@' . $this->prefix('cache'),
-				])
-				->addSetup('useCamelCase', [$config['useCamelCase']]);
-
-		}
-
-		return $mapperName;
 	}
 
 }

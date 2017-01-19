@@ -69,6 +69,18 @@ class ExampleMapper extends \NAttreid\Orm\Mapper {
         $relationTable->addForeignKey('exampleId', $table);
         $relationTable->addForeignKey('otherId', OtherMapper::class);
         $relationTable->setPrimaryKey('exampleId', 'otherId');
+        
+        $this->afterCreateTable[] = function () {
+            $this->insert([
+                [
+                    'id' => 1,
+                    'someId' => 1,
+                    'parentId' => 1,
+                    'pa' => 'test',
+                    // ...
+                ]
+            ]);
+        };
     }
 }
 ```

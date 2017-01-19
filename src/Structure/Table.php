@@ -19,6 +19,7 @@ use stdClass;
  * @property-read Connection $connection
  * @property-read Column[] $columns
  * @property-read PrimaryKey $primaryKey
+ * @property-read boolean $useCamelCase
  *
  * @author Attreid <attreid@gmail.com>
  */
@@ -74,7 +75,7 @@ class Table implements Serializable
 	/** @var string */
 	private $defaultDataFile;
 
-	public function __construct($name, $prefix, Connection $connection, Container $container = null, ITableFactory $tableFactory = null)
+	public function __construct($name, $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
 	{
 		$this->name = $name;
 		$this->prefix = $prefix;

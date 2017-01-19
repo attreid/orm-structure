@@ -2,12 +2,10 @@
 
 namespace NAttreid\Orm;
 
-use NAttreid\Orm\Structure\ITableFactory;
 use NAttreid\Orm\Structure\Table;
-use NAttreid\Utils\Hasher;
+use NAttreid\Utils\Arrays;
 use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
-use Nette\InvalidStateException;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\Result\Result;
@@ -22,53 +20,26 @@ use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
 abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 {
 
-	/** @var ITableFactory */
-	private $tableFactory;
-
-	/** @var Hasher */
-	private $hasher;
-
 	/** @var Table */
 	private $table;
-
-	/** @var boolean */
-	private $useCamelCase;
 
 	/** @var callback[] */
 	protected $afterCreateTable = [];
 
-	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
+	/** @var MapperManager */
+	private $manager;
+
+	public function __construct(Connection $connection, Cache $cache, MapperManager $manager)
 	{
 		parent::__construct($connection, $cache);
-		$this->tableFactory = $tableFactory;
-		$this->hasher = $hasher;
+		$this->manager = $manager;
 		$this->table = $this->checkTable();
-	}
-
-	/**
-	 * Pouzivat camel case v nazvech tabulek
-	 * @param bool $use
-	 */
-	public function useCamelCase($use = true)
-	{
-		if ($this->useCamelCase !== null) {
-			throw new InvalidStateException("'useCamelCase' is already set.");
-		}
-		$this->useCamelCase = (boolean)$use;
-	}
-
-	/**
-	 * @return bool
-	 */
-	protected function getUseCamelCase()
-	{
-		return $this->useCamelCase;
 	}
 
 	/** @inheritdoc */
 	public function getTableName()
 	{
-		if ($this->useCamelCase) {
+		if ($this->manager->useCamelCase) {
 			if (!$this->tableName) {
 				$this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
 			}
@@ -124,10 +95,10 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	public function getByHash($column, $hash)
 	{
-		if ($this->hasher === null) {
+		if ($this->manager->hasher === null) {
 			throw new MissingServiceException('Hasher is missing');
 		}
-		return $this->fetch($this->hasher->hashSQL($this->builder(), $column, $hash));
+		return $this->fetch($this->manager->hasher->hashSQL($this->builder(), $column, $hash));
 	}
 
 	/**
@@ -139,7 +110,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$result = $this->cache->load($key);
 		if ($result === null) {
 			$result = $this->cache->save($key, function () {
-				$table = $this->tableFactory->create($this->getTableName(), $this->getTablePrefix());
+				$table = $this->manager->tableFactory->create($this->getTableName(), $this->getTablePrefix());
 				$this->createTable($table);
 				$isNew = $table->check();
 				if ($isNew) {
@@ -176,7 +147,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	protected function insert(array $data)
 	{
-		$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
+		if (Arrays::isMultidimensional($data)) {
+			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values[]', $data);
+		} else {
+			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' % values', $data);
+		}
+
 	}
 
 	/**
@@ -195,12 +171,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 		if ($nextEntity !== null && $entity->$column > $nextEntity->$column) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
-				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
+				$connection->query('UPDATE % table SET % column = %column + 1 WHERE % column BETWEEN % i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
 			});
 			$entity->$column = $nextEntity->$column;
 		} elseif ($prevEntity !== null) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
-				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
+				$connection->query('UPDATE % table SET % column = %column - 1 WHERE % column BETWEEN % i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
 			});
 			$entity->$column = $prevEntity->$column;
 		} else {
@@ -216,7 +192,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	public function getMaxPosition($column)
 	{
-		return $this->connection->query('SELECT IFnull(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
+		return $this->connection->query('SELECT IFnull(MAX(%column), 0) position FROM % table', $column, $this->getTableName())->fetch()->position;
 	}
 
 }
