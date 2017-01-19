@@ -30,19 +30,27 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var Table */
 	private $table;
 
-	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
+	/** @var boolean */
+	private $useCamelCase;
+
+	public function __construct($useCamelCase, Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
 		parent::__construct($connection, $cache);
 		$this->tableFactory = $tableFactory;
 		$this->hasher = $hasher;
 		$this->table = $this->checkTable();
+		$this->useCamelCase = $useCamelCase;
 	}
 
 	/** @inheritdoc */
 	public function getTableName()
 	{
-		if (!$this->tableName) {
-			$this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
+		if ($this->useCamelCase) {
+			if (!$this->tableName) {
+				$this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
+			}
+		} else {
+			parent::getTableName();
 		}
 
 		return $this->getTablePrefix() . $this->tableName;
@@ -126,9 +134,16 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @inheritdoc */
 	protected function createStorageReflection()
 	{
-		return new CamelCaseStorageReflection(
-			$this->connection, $this->getTableName(), $this->getRepository()->getEntityMetadata()->getPrimaryKey(), $this->cache
-		);
+		if ($this->useCamelCase) {
+			return new CamelCaseStorageReflection(
+				$this->connection,
+				$this->getTableName(),
+				$this->getRepository()->getEntityMetadata()->getPrimaryKey(),
+				$this->cache
+			);
+		} else {
+			return parent::createStorageReflection();
+		}
 	}
 
 	/**

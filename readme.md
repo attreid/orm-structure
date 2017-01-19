@@ -16,6 +16,7 @@ dbal:
 
 orm:
     model: App\Model\Orm
+    useCamelCase: true
     add:
         - Another\Orm
 ```
