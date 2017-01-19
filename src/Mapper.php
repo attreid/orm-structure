@@ -7,6 +7,7 @@ use NAttreid\Orm\Structure\Table;
 use NAttreid\Utils\Hasher;
 use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
+use Nette\InvalidStateException;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\Result\Result;
@@ -31,7 +32,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	private $table;
 
 	/** @var boolean */
-	private $useCamelCase = true;
+	private $useCamelCase;
 
 	public function __construct(Connection $connection, Cache $cache, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
@@ -47,6 +48,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	public function useCamelCase($use = true)
 	{
+		if ($this->useCamelCase !== null) {
+			throw new InvalidStateException("'useCamelCase' is already set.");
+		}
 		$this->useCamelCase = (boolean)$use;
 	}
 
