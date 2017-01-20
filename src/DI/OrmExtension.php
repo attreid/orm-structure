@@ -22,7 +22,7 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		'useCamelCase' => true,
 		'model' => null,
 		'add' => [],
-		'autoManageDb' => false
+		'autoManageDb' => true
 	];
 
 	public function loadConfiguration()
