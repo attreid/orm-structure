@@ -10,6 +10,7 @@ use Nette\SmartObject;
  * Class MapperManager
  *
  * @property-read bool $useCamelCase
+ * @property-read bool $autoManageDb
  * @property-read ITableFactory $tableFactory
  * @property-read Hasher $hasher
  *
@@ -22,15 +23,19 @@ class MapperManager
 	/** @var bool */
 	private $useCamelCase;
 
+	/** @var bool */
+	private $autoManageDb;
+
 	/** @var ITableFactory */
 	private $tableFactory;
 
 	/** @var Hasher */
 	private $hasher;
 
-	public function __construct($useCamelCase, ITableFactory $tableFactory, Hasher $hasher = null)
+	public function __construct($useCamelCase, $autoManageDb, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
 		$this->useCamelCase = (bool)$useCamelCase;
+		$this->autoManageDb = (bool)$autoManageDb;
 		$this->tableFactory = $tableFactory;
 		$this->hasher = $hasher;
 	}
@@ -41,6 +46,14 @@ class MapperManager
 	protected function isUseCamelCase()
 	{
 		return $this->useCamelCase;
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function isAutoManageDb()
+	{
+		return $this->autoManageDb;
 	}
 
 	/**

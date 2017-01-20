@@ -17,6 +17,7 @@ dbal:
 orm:
     model: App\Model\Orm
     useCamelCase: true
+    autoManageDb: true # automaticka kontrola tabulek a vytvareni neexistujicich
     add:
         - Another\Orm
 ```

@@ -112,10 +112,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 			$result = $this->cache->save($key, function () {
 				$table = $this->manager->tableFactory->create($this->getTableName(), $this->getTablePrefix());
 				$this->createTable($table);
-				$isNew = $table->check();
-				if ($isNew) {
-					foreach ($this->afterCreateTable as $callback) {
-						$callback();
+				if ($this->manager->autoManageDb) {
+					$isNew = $table->check();
+					if ($isNew) {
+						foreach ($this->afterCreateTable as $callback) {
+							$callback();
+						}
 					}
 				}
 				return $table;

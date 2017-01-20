@@ -21,7 +21,8 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		'metadataParserFactory' => MetadataParserFactory::class,
 		'useCamelCase' => true,
 		'model' => null,
-		'add' => []
+		'add' => [],
+		'autoManageDb' => false
 	];
 
 	public function loadConfiguration()
@@ -41,7 +42,8 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		$builder->addDefinition($this->prefix('mapperManager'))
 			->setClass(MapperManager::class)
 			->setArguments([
-				'useCamelCase' => $config['useCamelCase']
+				'useCamelCase' => $config['useCamelCase'],
+				'autoManageDb' => $config['autoManageDb']
 			]);
 
 		$builder->addDefinition($this->prefix('tableFactory'))
