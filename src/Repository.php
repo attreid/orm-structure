@@ -25,7 +25,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	}
 
 	/**
-	 * Vrati pole [id, name] serazene podle [name]
+	 * Vrati pole [id => name] serazene podle [name]
 	 * @return array
 	 */
 	public function fetchPairsByName()
@@ -34,7 +34,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	}
 
 	/**
-	 * Vrati pole [id, name] serazene podle [id]
+	 * Vrati pole [id => name] serazene podle [id]
 	 * @return array
 	 */
 	public function fetchPairsById()
