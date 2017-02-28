@@ -197,4 +197,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return $this->connection->query('SELECT IFnull(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
 	}
 
+	/**
+	 * Smaze data v tabulce
+	 */
+	public function truncate()
+	{
+		$this->connection->query('TRUNCATE TABLE %table', $this->getTableName());
+	}
+
 }
