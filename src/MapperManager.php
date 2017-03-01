@@ -34,10 +34,10 @@ class MapperManager
 	/** @var Hasher */
 	private $hasher;
 
-	public function __construct($useCamelCase, $autoManageDb, ITableFactory $tableFactory, Hasher $hasher = null)
+	public function __construct(bool $useCamelCase, bool $autoManageDb, ITableFactory $tableFactory, Hasher $hasher = null)
 	{
-		$this->useCamelCase = (bool)$useCamelCase;
-		$this->autoManageDb = (bool)$autoManageDb;
+		$this->useCamelCase = $useCamelCase;
+		$this->autoManageDb = $autoManageDb;
 		$this->tableFactory = $tableFactory;
 		$this->hasher = $hasher;
 	}
@@ -45,7 +45,7 @@ class MapperManager
 	/**
 	 * @return bool
 	 */
-	protected function isUseCamelCase()
+	protected function isUseCamelCase(): bool
 	{
 		return $this->useCamelCase;
 	}
@@ -53,7 +53,7 @@ class MapperManager
 	/**
 	 * @return bool
 	 */
-	protected function isAutoManageDb()
+	protected function isAutoManageDb(): bool
 	{
 		return $this->autoManageDb;
 	}
@@ -61,7 +61,7 @@ class MapperManager
 	/**
 	 * @return ITableFactory
 	 */
-	protected function getTableFactory()
+	protected function getTableFactory(): ITableFactory
 	{
 		return $this->tableFactory;
 	}
@@ -69,7 +69,7 @@ class MapperManager
 	/**
 	 * @return Hasher
 	 */
-	protected function getHasher()
+	protected function getHasher(): Hasher
 	{
 		return $this->hasher;
 	}

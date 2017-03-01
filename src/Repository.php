@@ -30,7 +30,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	 * Vrati pole [id => name] serazene podle [name]
 	 * @return array
 	 */
-	public function fetchPairsByName()
+	public function fetchPairsByName(): array
 	{
 		return $this->findAll()->orderBy('name')->fetchPairs('id', 'name');
 	}
@@ -39,7 +39,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	 * Vrati pole [id => name] serazene podle [id]
 	 * @return array
 	 */
-	public function fetchPairsById()
+	public function fetchPairsById(): array
 	{
 		return $this->findAll()->orderBy('id')->fetchPairs('id', 'name');
 	}
@@ -48,7 +48,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	 * Je tabulka prazdna?
 	 * @return bool
 	 */
-	public function isEmpty()
+	public function isEmpty(): bool
 	{
 		return $this->findAll()->count() == 0;
 	}

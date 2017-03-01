@@ -55,7 +55,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * @return Table
 	 */
-	public function getStructure()
+	public function getStructure(): Table
 	{
 		return $this->table;
 	}
@@ -73,7 +73,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * Vrati entitu dotazu
 	 * @param QueryBuilder $builder
-	 * @return IEntity
+	 * @return IEntity|null
 	 */
 	protected function fetch(QueryBuilder $builder)
 	{
@@ -84,7 +84,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * Vrati predponu nazvu tabulky
 	 * @return string
 	 */
-	public function getTablePrefix()
+	public function getTablePrefix(): string
 	{
 		return '';
 	}
@@ -93,9 +93,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * Vrati radek podle hash sloupce
 	 * @param string $column
 	 * @param string $hash
-	 * @return IEntity
+	 * @return IEntity|null
 	 */
-	public function getByHash($column, $hash)
+	public function getByHash(string $column, string $hash)
 	{
 		if ($this->manager->hasher === null) {
 			throw new MissingServiceException('Hasher is missing');
@@ -106,7 +106,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * @return Table
 	 */
-	private function checkTable()
+	private function checkTable(): Table
 	{
 		$key = $this->getTableName() . 'Structure';
 		$result = $this->cache->load($key);
@@ -162,11 +162,11 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * Zmeni razeni
 	 * @param string $column
-	 * @param mixed $id
-	 * @param mixed $prevId
-	 * @param mixed $nextId
+	 * @param int $id
+	 * @param int $prevId
+	 * @param int $nextId
 	 */
-	public function changeSort($column, $id, $prevId, $nextId)
+	public function changeSort(string $column, int $id, int $prevId, int $nextId)
 	{
 		$repo = $this->getRepository();
 		$entity = $repo->getById($id);
@@ -194,7 +194,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param string $column
 	 * @return int
 	 */
-	public function getMaxPosition($column)
+	public function getMaxPosition(string $column): int
 	{
 		return $this->connection->query('SELECT IFnull(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
 	}
