@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace NAttreid\Orm\Structure;
 
 use InvalidArgumentException;
@@ -23,7 +25,7 @@ class PrimaryKey
 	/** @var Table */
 	private $table;
 
-	public function __construct(Table $table, ...$key)
+	public function __construct(Table $table, string...$key)
 	{
 		if (count($key) === 0) {
 			throw new InvalidArgumentException;
@@ -35,9 +37,9 @@ class PrimaryKey
 
 	/**
 	 * @param array $keys
-	 * @return boolean
+	 * @return bool
 	 */
-	public function equals(array $keys)
+	public function equals(array $keys): bool
 	{
 		return $this->keys === $keys;
 	}
@@ -45,7 +47,7 @@ class PrimaryKey
 	/**
 	 * @return string
 	 */
-	protected function getName()
+	protected function getName(): string
 	{
 		return $this->keys[0];
 	}
@@ -53,7 +55,7 @@ class PrimaryKey
 	/**
 	 * @return Column
 	 */
-	protected function getColumn()
+	protected function getColumn(): Column
 	{
 		return $this->table->columns[$this->name];
 	}

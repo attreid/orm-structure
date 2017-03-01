@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace NAttreid\Orm\Structure;
 
 use Nextras\Dbal\Result\Row;
@@ -25,7 +27,7 @@ class Column
 	/** @var Table */
 	private $table;
 
-	public function __construct(Table $table, $name)
+	public function __construct(Table $table, string $name)
 	{
 		$this->name = $name;
 		$this->table = $table;
@@ -36,7 +38,7 @@ class Column
 	 * @param Row $row
 	 * @return string
 	 */
-	private function prepareColumn(Row $row)
+	private function prepareColumn(Row $row): string
 	{
 		$nullable = $row->Null === 'YES';
 
@@ -68,10 +70,10 @@ class Column
 	}
 
 	/**
-	 * Nastavi typ na boolean (hodnota 0,1)
+	 * Nastavi typ na bool (hodnota 0,1)
 	 * @return self
 	 */
-	public function boolean()
+	public function bool(): self
 	{
 		$this->type = 'tinyint(1)';
 		return $this;
@@ -81,7 +83,7 @@ class Column
 	 * Nastavi hodnotu sloupce na unikatni
 	 * @return self
 	 */
-	public function setUnique()
+	public function setUnique(): self
 	{
 		$this->table->addUnique($this->name);
 		return $this;
@@ -91,7 +93,7 @@ class Column
 	 * Nastavi klic
 	 * @return self
 	 */
-	public function setKey()
+	public function setKey(): self
 	{
 		$this->table->addKey($this->name);
 		return $this;
@@ -101,7 +103,7 @@ class Column
 	 * Nastave jako fulltext
 	 * @return $this
 	 */
-	public function setFulltext()
+	public function setFulltext(): self
 	{
 		$this->table->addFulltext($this->name);
 		return $this;
@@ -112,9 +114,9 @@ class Column
 	 * @param int $size
 	 * @return self
 	 */
-	public function int($size = 11)
+	public function int(int $size = 11): self
 	{
-		$this->type = 'int(' . (int)$size . ')';
+		$this->type = 'int(' . $size . ')';
 		return $this;
 	}
 
@@ -123,9 +125,9 @@ class Column
 	 * @param int $size
 	 * @return self
 	 */
-	public function bigint($size = 15)
+	public function bigint(int $size = 15): self
 	{
-		$this->type = 'bigint(' . (int)$size . ')';
+		$this->type = 'bigint(' . $size . ')';
 		return $this;
 	}
 
@@ -135,9 +137,9 @@ class Column
 	 * @param int $decimal
 	 * @return self
 	 */
-	public function decimal($total, $decimal)
+	public function decimal(int $total, int $decimal): self
 	{
-		$this->type = 'decimal(' . (int)$total . ',' . (int)$decimal . ')';
+		$this->type = 'decimal(' . $total . ',' . $decimal . ')';
 		return $this;
 	}
 
@@ -147,9 +149,9 @@ class Column
 	 * @param int $decimal
 	 * @return self
 	 */
-	public function float($total, $decimal)
+	public function float(int $total, int $decimal): self
 	{
-		$this->type = 'float(' . (int)$total . ',' . (int)$decimal . ')';
+		$this->type = 'float(' . $total . ',' . $decimal . ')';
 		return $this;
 	}
 
@@ -158,7 +160,7 @@ class Column
 	 * @param int $size
 	 * @return self
 	 */
-	public function varChar($size = 255)
+	public function varChar(int $size = 255): self
 	{
 		$this->type = 'varchar(' . $size . ') COLLATE ' . $this->table->collate;
 		return $this;
@@ -169,7 +171,7 @@ class Column
 	 * @param int $size
 	 * @return self
 	 */
-	public function char($size = 36)
+	public function char(int $size = 36): self
 	{
 		$this->type = 'char(' . $size . ') COLLATE ' . $this->table->collate;
 		return $this;
@@ -179,7 +181,7 @@ class Column
 	 * Nastavi typ na text
 	 * @return self
 	 */
-	public function text()
+	public function text(): self
 	{
 		$this->type = 'text COLLATE ' . $this->table->collate;
 		return $this;
@@ -189,7 +191,7 @@ class Column
 	 * Nastavi typ na datetime
 	 * @return self
 	 */
-	public function datetime()
+	public function datetime(): self
 	{
 		$this->type = 'datetime';
 		return $this;
@@ -199,7 +201,7 @@ class Column
 	 * Nastavi typ na date
 	 * @return self
 	 */
-	public function date()
+	public function date(): self
 	{
 		$this->type = 'date';
 		return $this;
@@ -207,10 +209,10 @@ class Column
 
 	/**
 	 * Nastavi typ na timestamp (pri vytvoreni se ulozi datum)
-	 * @param boolean $onUpdate true = datum se zmeni pri zmene
+	 * @param bool $onUpdate true = datum se zmeni pri zmene
 	 * @return self
 	 */
-	public function timestamp($onUpdate = false)
+	public function timestamp(bool $onUpdate = false): self
 	{
 		$this->type = 'timestamp';
 		$this->default = 'NOT null DEFAULT CURRENT_TIMESTAMP' . ($onUpdate ? ' ON UPDATE CURRENT_TIMESTAMP' : '');
@@ -221,10 +223,10 @@ class Column
 	/**
 	 * Nastavi default
 	 * @param mixed $default false => NOT null (default), null => DEFAULT null, ostatni DEFAULT dana hodnota
-	 * @param boolean $empty
+	 * @param bool $empty
 	 * @return self
 	 */
-	public function setDefault($default = false, $empty = false)
+	public function setDefault($default = false, bool $empty = false): self
 	{
 		if ($this->type == 'timestamp') {
 			return $this;
@@ -234,7 +236,7 @@ class Column
 		} elseif ($default === null) {
 			$this->default = 'DEFAULT null';
 		} else {
-			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT {$this->table->escapeString($default)}";
+			$this->default = ($empty ? '' : 'NOT null ') . "DEFAULT {$this->table->escapeString((string)$default)}";
 		}
 		return $this;
 	}
@@ -252,7 +254,7 @@ class Column
 	 * @param Column $column
 	 * @return $this
 	 */
-	public function setType(Column $column)
+	public function setType(Column $column): self
 	{
 		$this->type = $column->type;
 		return $this;
@@ -263,7 +265,7 @@ class Column
 	 * @param string $column
 	 * @return bool
 	 */
-	public function equals(Row $column)
+	public function equals(Row $column): bool
 	{
 		$col = $this->prepareColumn($column);
 		return $col == "`$this->name` $this->type $this->default";

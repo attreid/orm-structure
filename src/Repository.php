@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace NAttreid\Orm;
 
 use Nextras\Orm\Mapper\IMapper;
@@ -44,7 +46,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 
 	/**
 	 * Je tabulka prazdna?
-	 * @return boolean
+	 * @return bool
 	 */
 	public function isEmpty()
 	{

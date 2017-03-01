@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace NAttreid\Orm\Structure;
 
 use Nette\SmartObject;
@@ -46,7 +48,7 @@ class Constrait
 	 * @param mixed $onDelete false => NO ACTION, true => CASCADE, null => SET NULL
 	 * @param mixed $onUpdate false => NO ACTION, true => CASCADE, null => SET NULL
 	 */
-	public function __construct($key, Table $table, Table $referenceTable, $onDelete = true, $onUpdate = false)
+	public function __construct(string $key, Table $table, Table $referenceTable, $onDelete = true, $onUpdate = false)
 	{
 		$column = $table->addColumn($key)
 			->setType($referenceTable->primaryKey->column);
@@ -71,7 +73,7 @@ class Constrait
 	/**
 	 * @return string
 	 */
-	protected function getName()
+	protected function getName(): string
 	{
 		return $this->name;
 	}
@@ -79,7 +81,7 @@ class Constrait
 	/**
 	 * @return Column
 	 */
-	protected function getColumn()
+	protected function getColumn(): Column
 	{
 		return $this->column;
 	}
@@ -89,7 +91,7 @@ class Constrait
 	 * @param mixed $value
 	 * @return string
 	 */
-	private function prepareOnChange($value)
+	private function prepareOnChange($value): string
 	{
 		if ($value === false) {
 			return 'NO ACTION';
@@ -104,7 +106,7 @@ class Constrait
 	 * @param Row $row
 	 * @return bool
 	 */
-	public function equals(Row $row)
+	public function equals(Row $row): bool
 	{
 		$constrait = $this->prepare(
 			$row->CONSTRAINT_NAME,
@@ -126,7 +128,7 @@ class Constrait
 	 * @param string $onUpdate
 	 * @return string
 	 */
-	private function prepare($name, $key, $referenceTable, $referenceKey, $onDelete, $onUpdate)
+	private function prepare(string $name, string $key, string $referenceTable, string $referenceKey, string $onDelete, string $onUpdate): string
 	{
 		return "CONSTRAINT [$name] FOREIGN KEY ([$key]) REFERENCES [$referenceTable] ([$referenceKey]) ON DELETE $onDelete ON UPDATE $onUpdate";
 	}

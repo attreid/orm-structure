@@ -1,0 +1,99 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace NAttreid\Orm\Structure;
+
+use Nette\SmartObject;
+
+/**
+ * Class Key
+ *
+ * @property string $name
+ * @property-read string[] $columns
+ * @property string $type
+ * @property bool $unique
+ *
+ * @author Attreid <attreid@gmail.com>
+ */
+class Key
+{
+	use SmartObject;
+
+	/** @var string */
+	private $name;
+
+	/** @var string[] */
+	private $columns;
+
+	/** @var string */
+	private $type;
+
+	/** @var bool */
+	private $unique;
+
+	/**
+	 * @return string
+	 */
+	protected function getName(): string
+	{
+		return $this->name;
+	}
+
+	/**
+	 * @param string $name
+	 */
+	protected function setName(string $name)
+	{
+		$this->name = $name;
+	}
+
+	/**
+	 * @return string[]
+	 */
+	protected function getColumns(): array
+	{
+		return $this->columns;
+	}
+
+	/**
+	 * @param string $index
+	 * @param string $name
+	 */
+	public function addColumn(string $index, string $name)
+	{
+		$this->columns[$index] = $name;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getType(): string
+	{
+		return $this->type;
+	}
+
+	/**
+	 * @param string $type
+	 */
+	protected function setType(string $type)
+	{
+		$this->type = $type;
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function isUnique(): bool
+	{
+		return $this->unique;
+	}
+
+	/**
+	 * @param bool $unique
+	 */
+	protected function setUnique(bool $unique)
+	{
+		$this->unique = $unique;
+	}
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Nattreid\Orm\DI;
 
 use NAttreid\Orm\MapperManager;

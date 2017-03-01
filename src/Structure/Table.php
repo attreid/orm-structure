@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace NAttreid\Orm\Structure;
 
 use InvalidArgumentException;
@@ -10,7 +12,6 @@ use Nextras\Dbal\Connection;
 use Nextras\Dbal\Result\Result;
 use Nextras\Dbal\Utils\FileImporter;
 use Serializable;
-use stdClass;
 
 /**
  * Tabulka
@@ -19,7 +20,7 @@ use stdClass;
  * @property-read Connection $connection
  * @property-read Column[] $columns
  * @property-read PrimaryKey $primaryKey
- * @property-read boolean $useCamelCase
+ * @property-read bool $useCamelCase
  *
  * @author Attreid <attreid@gmail.com>
  */
@@ -75,7 +76,7 @@ class Table implements Serializable
 	/** @var string */
 	private $defaultDataFile;
 
-	public function __construct($name, $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
+	public function __construct(string $name, string $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
 	{
 		$this->name = $name;
 		$this->prefix = $prefix;
@@ -87,7 +88,7 @@ class Table implements Serializable
 	/**
 	 * @return string
 	 */
-	protected function getName()
+	protected function getName(): string
 	{
 		return $this->name;
 	}
@@ -95,7 +96,7 @@ class Table implements Serializable
 	/**
 	 * @return Connection
 	 */
-	protected function getConnection()
+	protected function getConnection(): Connection
 	{
 		return $this->connection;
 	}
@@ -103,7 +104,7 @@ class Table implements Serializable
 	/**
 	 * @return Column[]
 	 */
-	protected function getColumns()
+	protected function getColumns(): array
 	{
 		return $this->columns;
 	}
@@ -113,7 +114,7 @@ class Table implements Serializable
 	 * @param string $engine
 	 * @return self
 	 */
-	public function setEngine($engine)
+	public function setEngine(string $engine): self
 	{
 		$this->engine = $engine;
 		return $this;
@@ -124,7 +125,7 @@ class Table implements Serializable
 	 * @param string $charset
 	 * @return self
 	 */
-	public function setCharset($charset)
+	public function setCharset(string $charset): self
 	{
 		$this->charset = $charset;
 		return $this;
@@ -135,7 +136,7 @@ class Table implements Serializable
 	 * @param string $collate
 	 * @return self
 	 */
-	public function setCollate($collate)
+	public function setCollate(string $collate): self
 	{
 		$this->collate = $collate;
 		return $this;
@@ -145,7 +146,7 @@ class Table implements Serializable
 	 * Nastavi soubor pro nahrani dat pri vytvareni tabulky
 	 * @param string $file
 	 */
-	public function setDefaultDataFile($file)
+	public function setDefaultDataFile(string $file)
 	{
 		$this->defaultDataFile = $file;
 	}
@@ -155,7 +156,7 @@ class Table implements Serializable
 	 * @param string $tableName
 	 * @return self
 	 */
-	public function createRelationTable($tableName)
+	public function createRelationTable(string $tableName): self
 	{
 		$table = $this->getTableData($tableName);
 
@@ -166,9 +167,9 @@ class Table implements Serializable
 
 	/**
 	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
-	 * @return boolean pokud je vytvorena vrati true
+	 * @return bool pokud je vytvorena vrati true
 	 */
-	public function check()
+	public function check(): bool
 	{
 		$isNew = false;
 		$this->connection->query('SET foreign_key_checks = 0');
@@ -297,7 +298,7 @@ class Table implements Serializable
 	 * @param string $value
 	 * @return string
 	 */
-	public function escapeString($value)
+	public function escapeString(string $value): string
 	{
 		$this->connection->reconnect();
 		return $this->connection->getDriver()->convertStringToSql((string)$value);
@@ -305,7 +306,7 @@ class Table implements Serializable
 
 	/**
 	 * Vrati primarni klic
-	 * @return PrimaryKey
+	 * @return PrimaryKey|null
 	 */
 	protected function getPrimaryKey()
 	{
@@ -316,7 +317,7 @@ class Table implements Serializable
 	 * Pridavek za dotaz (partition atd)
 	 * @param string $addition
 	 */
-	public function add($addition)
+	public function add(string $addition)
 	{
 		$this->addition = $addition;
 	}
@@ -326,7 +327,7 @@ class Table implements Serializable
 	 * @param string $name
 	 * @return Column
 	 */
-	public function addColumn($name)
+	public function addColumn(string $name): Column
 	{
 		return $this->columns[$name] = new Column($this, $name);
 	}
@@ -336,7 +337,7 @@ class Table implements Serializable
 	 * @param string $name
 	 * @return Column
 	 */
-	public function addPrimaryKey($name)
+	public function addPrimaryKey(string $name): Column
 	{
 		$column = $this->addColumn($name);
 		$this->setPrimaryKey($name);
@@ -351,7 +352,7 @@ class Table implements Serializable
 	 * @param mixed $onUpdate false => NO ACTION, true => CASCADE, null => SET null
 	 * @return Column
 	 */
-	public function addForeignKey($name, $mapperClass, $onDelete = true, $onUpdate = false)
+	public function addForeignKey(string $name, $mapperClass, $onDelete = true, $onUpdate = false): Column
 	{
 		$table = $this->getTableData($mapperClass);
 
@@ -365,7 +366,7 @@ class Table implements Serializable
 	 * Odebere sloupec
 	 * @param string $name
 	 */
-	public function removeColumn($name)
+	public function removeColumn(string $name)
 	{
 		unset($this->columns[$name]);
 	}
@@ -373,9 +374,9 @@ class Table implements Serializable
 	/**
 	 * Nastavi fulltext
 	 * @param string ...$key
-	 * @return $this
+	 * @return self
 	 */
-	public function addFulltext(...$name)
+	public function addFulltext(string ...$name): self
 	{
 		$key = new Index(...$name);
 		$key->setFulltext();
@@ -388,7 +389,7 @@ class Table implements Serializable
 	 * @param  string ...$key
 	 * @return self
 	 */
-	public function addUnique(...$name)
+	public function addUnique(string ...$name): self
 	{
 		$key = new Index(...$name);
 		$key->setUnique();
@@ -401,7 +402,7 @@ class Table implements Serializable
 	 * @param  string ...$name
 	 * @return self
 	 */
-	public function addKey(...$name)
+	public function addKey(string...$name): self
 	{
 		$key = new Index(...$name);
 		$this->keys[$key->name] = $key;
@@ -413,7 +414,7 @@ class Table implements Serializable
 	 * @param  string ...$key
 	 * @return self
 	 */
-	public function setPrimaryKey(...$key)
+	public function setPrimaryKey(string...$key): self
 	{
 		$this->primaryKey = new PrimaryKey($this, ...$key);
 		return $this;
@@ -424,7 +425,7 @@ class Table implements Serializable
 	 * @param int $first
 	 * @return self
 	 */
-	public function setAutoIncrement($first)
+	public function setAutoIncrement(int $first): self
 	{
 		$this->autoIncrement = $first;
 		return $this;
@@ -433,10 +434,10 @@ class Table implements Serializable
 	/**
 	 * Vrati nazev tabulky a jeji klic
 	 * @param string|Table $table
-	 * @return Table
+	 * @return self
 	 * @throws InvalidArgumentException
 	 */
-	private function getTableData($table)
+	private function getTableData($table): self
 	{
 		if ($table instanceof Table) {
 			return $table;
@@ -471,10 +472,11 @@ class Table implements Serializable
 
 	/**
 	 * Pripravy klice
-	 * @return array
+	 * @return Key[]
 	 */
-	private function getKeys()
+	private function getKeys(): array
 	{
+		/* @var $result Key[] */
 		$result = [];
 		$rows = $this->connection->query("
 			SELECT 
@@ -491,10 +493,10 @@ class Table implements Serializable
 			if (isset($result[$name])) {
 				$obj = $result[$name];
 			} else {
-				$obj = new stdClass;
+				$obj = new Key;
 			}
 			$obj->name = $name;
-			$obj->columns[$row->SEQ_IN_INDEX] = $row->COLUMN_NAME;
+			$obj->addColumn($row->SEQ_IN_INDEX, $row->COLUMN_NAME);
 			$obj->type = $row->INDEX_TYPE;
 			$obj->unique = !$row->NON_UNIQUE;
 
@@ -551,5 +553,5 @@ interface ITableFactory
 	 * @param $prefix
 	 * @return Table
 	 */
-	public function create($name, $prefix);
+	public function create($name, $prefix): Table;
 }

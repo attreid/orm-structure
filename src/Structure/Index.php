@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace NAttreid\Orm\Structure;
 
 use InvalidArgumentException;
 use Nette\SmartObject;
-use stdClass;
 
 /**
  * Class Index
@@ -30,7 +31,7 @@ class Index
 	/** @var string */
 	private $prefix;
 
-	public function __construct(...$key)
+	public function __construct(string...$key)
 	{
 		if (count($key) === 0) {
 			throw new InvalidArgumentException;
@@ -43,7 +44,7 @@ class Index
 	/**
 	 * @return string
 	 */
-	protected function getName()
+	protected function getName(): string
 	{
 		return $this->name;
 	}
@@ -52,7 +53,7 @@ class Index
 	 * Nastavi hodnotu sloupce na unikatni
 	 * @return self
 	 */
-	public function setUnique()
+	public function setUnique(): self
 	{
 		$this->prefix = self::UNIQUE;
 		return $this;
@@ -62,19 +63,18 @@ class Index
 	 * Nastavi typ na fulltext
 	 * @return self
 	 */
-	public function setFulltext()
+	public function setFulltext(): self
 	{
 		$this->prefix = self::FULLTEXT;
 		return $this;
 	}
 
 	/**
-	 * @param stdClass[] $row
+	 * @param Key $row
 	 * @return bool
 	 */
-	public function equals($row)
+	public function equals(Key $row): bool
 	{
-		ksort($row->columns);
 		$prefix = null;
 		if ($row->unique) {
 			$prefix = self::UNIQUE;
@@ -96,7 +96,7 @@ class Index
 	 * @param string $prefix
 	 * @return string
 	 */
-	private function prepare($name, array $keys, $prefix = null)
+	private function prepare(string $name, array $keys, string $prefix = null): string
 	{
 		$key = '[' . implode('], [', $keys) . ']';
 		return ($prefix !== null ? $prefix . ' ' : '') . "KEY [$name] ($key)";
