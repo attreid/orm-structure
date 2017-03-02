@@ -57,10 +57,10 @@ class Key
 	}
 
 	/**
-	 * @param string $index
+	 * @param int $index
 	 * @param string $name
 	 */
-	public function addColumn(string $index, string $name)
+	public function addColumn(int $index, string $name)
 	{
 		$this->columns[$index] = $name;
 	}

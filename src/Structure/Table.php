@@ -549,9 +549,9 @@ interface ITableFactory
 {
 
 	/**
-	 * @param $name
-	 * @param $prefix
+	 * @param string $name
+	 * @param string $prefix
 	 * @return Table
 	 */
-	public function create($name, $prefix): Table;
+	public function create(string $name, string $prefix): Table;
 }
