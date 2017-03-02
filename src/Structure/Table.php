@@ -153,10 +153,10 @@ class Table implements Serializable
 
 	/**
 	 * Vytvori spojovou tabulku
-	 * @param string $tableName
+	 * @param string|Table $tableName
 	 * @return self
 	 */
-	public function createRelationTable(string $tableName): self
+	public function createRelationTable($tableName): self
 	{
 		$table = $this->getTableData($tableName);
 
