@@ -166,7 +166,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param int $prevId
 	 * @param int $nextId
 	 */
-	public function changeSort(string $column, int $id, int $prevId, int $nextId)
+	public function changeSort(string $column, $id, $prevId, $nextId)
 	{
 		$repo = $this->getRepository();
 		$entity = $repo->getById($id);
