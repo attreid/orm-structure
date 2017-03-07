@@ -154,7 +154,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		if (Arrays::isMultidimensional($data)) {
 			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values[]', $data);
 		} else {
-			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' % values', $data);
+			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
 		}
 
 	}
@@ -175,12 +175,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 		if ($nextEntity !== null && $entity->$column > $nextEntity->$column) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
-				$connection->query('UPDATE % table SET % column = %column + 1 WHERE % column BETWEEN % i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
+				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
 			});
 			$entity->$column = $nextEntity->$column;
 		} elseif ($prevEntity !== null) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
-				$connection->query('UPDATE % table SET % column = %column - 1 WHERE % column BETWEEN % i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
+				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
 			});
 			$entity->$column = $prevEntity->$column;
 		} else {
