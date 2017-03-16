@@ -117,9 +117,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 				if ($this->manager->autoManageDb) {
 					$isNew = $table->check();
 					if ($isNew) {
-						foreach ($this->afterCreateTable as $callback) {
-							$callback();
-						}
+						$this->afterCreateTable();
 					}
 				}
 				return $table;
