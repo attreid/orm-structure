@@ -26,7 +26,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	private $table;
 
 	/** @var callback[] */
-	protected $afterCreateTable = [];
+	public $onCreateTable = [];
 
 	/** @var MapperManager */
 	private $manager;
@@ -117,7 +117,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 				if ($this->manager->autoManageDb) {
 					$isNew = $table->check();
 					if ($isNew) {
-						$this->afterCreateTable();
+						$this->onCreateTable();
 					}
 				}
 				return $table;
