@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm\Structure;
 
@@ -193,7 +193,7 @@ class Table implements Serializable
 	/**
 	 * Vytvori tabulku
 	 */
-	private function create()
+	private function create(): void
 	{
 		$query = "CREATE TABLE IF NOT EXISTS %table (\n"
 			. implode(",\n", $this->columns) . ",\n"
@@ -209,7 +209,7 @@ class Table implements Serializable
 	/**
 	 * Upravi tabulku
 	 */
-	private function modify()
+	private function modify(): void
 	{
 		$drop = $modify = $add = $primKey = [];
 
@@ -301,14 +301,14 @@ class Table implements Serializable
 	public function escapeString(string $value): string
 	{
 		$this->connection->reconnect();
-		return $this->connection->getDriver()->convertStringToSql((string)$value);
+		return $this->connection->getDriver()->convertStringToSql((string) $value);
 	}
 
 	/**
 	 * Vrati primarni klic
 	 * @return PrimaryKey|null
 	 */
-	protected function getPrimaryKey()
+	protected function getPrimaryKey(): ?PrimaryKey
 	{
 		return $this->primaryKey;
 	}
@@ -317,7 +317,7 @@ class Table implements Serializable
 	 * Pridavek za dotaz (partition atd)
 	 * @param string $addition
 	 */
-	public function add(string $addition)
+	public function add(string $addition): void
 	{
 		$this->addition = $addition;
 	}
@@ -366,7 +366,7 @@ class Table implements Serializable
 	 * Odebere sloupec
 	 * @param string $name
 	 */
-	public function removeColumn(string $name)
+	public function removeColumn(string $name): void
 	{
 		unset($this->columns[$name]);
 	}
@@ -454,7 +454,7 @@ class Table implements Serializable
 	 * Pripravy cizi klice
 	 * @return Result|null
 	 */
-	private function getConstraits()
+	private function getConstraits(): ?Result
 	{
 		return $this->connection->query("
 			SELECT 
@@ -505,7 +505,7 @@ class Table implements Serializable
 		return $result;
 	}
 
-	public function serialize()
+	public function serialize(): string
 	{
 		$unserialized = [
 			'name' => $this->name,
@@ -525,7 +525,7 @@ class Table implements Serializable
 		return serialize($unserialized);
 	}
 
-	public function unserialize($serialized)
+	public function unserialize($serialized): void
 	{
 		$unserialized = unserialize($serialized);
 
@@ -547,11 +547,5 @@ class Table implements Serializable
 
 interface ITableFactory
 {
-
-	/**
-	 * @param string $name
-	 * @param string $prefix
-	 * @return Table
-	 */
 	public function create(string $name, string $prefix): Table;
 }

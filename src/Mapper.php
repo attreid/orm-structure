@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm;
 
@@ -13,6 +13,7 @@ use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\Result\Result;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
+use Nextras\Orm\Mapper\Dbal\StorageReflection\StorageReflection;
 
 /**
  * Mapper
@@ -39,7 +40,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	}
 
 	/** @inheritdoc */
-	public function getTableName()
+	public function getTableName(): string
 	{
 		if ($this->manager->useCamelCase) {
 			if (!$this->tableName) {
@@ -65,7 +66,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param QueryBuilder $builder
 	 * @return Result|null
 	 */
-	protected function execute(QueryBuilder $builder)
+	protected function execute(QueryBuilder $builder): ?Result
 	{
 		return $this->connection->queryArgs($builder->getQuerySql(), $builder->getQueryParameters());
 	}
@@ -75,7 +76,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param QueryBuilder $builder
 	 * @return IEntity|null
 	 */
-	protected function fetch(QueryBuilder $builder)
+	protected function fetch(QueryBuilder $builder): ?IEntity
 	{
 		return $this->toCollection($builder)->fetch();
 	}
@@ -95,7 +96,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param string $hash
 	 * @return IEntity|null
 	 */
-	public function getByHash(string $column, string $hash)
+	public function getByHash(string $column, string $hash): ?IEntity
 	{
 		if ($this->manager->hasher === null) {
 			throw new MissingServiceException('Hasher is missing');
@@ -130,10 +131,10 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * Nastavi strukturu tabulky
 	 * @param Table $table
 	 */
-	abstract protected function createTable(Table $table);
+	abstract protected function createTable(Table $table): void;
 
 	/** @inheritdoc */
-	protected function createStorageReflection()
+	protected function createStorageReflection(): StorageReflection
 	{
 		return new CamelCaseStorageReflection(
 			$this->connection,
@@ -147,7 +148,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * INSERT
 	 * @param array $data
 	 */
-	protected function insert(array $data)
+	protected function insert(array $data): void
 	{
 		if (Arrays::isMultidimensional($data)) {
 			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values[]', $data);
@@ -164,7 +165,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param int $prevId
 	 * @param int $nextId
 	 */
-	public function changeSort(string $column, $id, $prevId, $nextId)
+	public function changeSort(string $column, $id, $prevId, $nextId): void
 	{
 		$repo = $this->getRepository();
 		$entity = $repo->getById($id);
@@ -200,7 +201,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * Smaze data v tabulce
 	 */
-	public function truncate()
+	public function truncate(): void
 	{
 		$this->connection->query('TRUNCATE TABLE %table', $this->getTableName());
 	}

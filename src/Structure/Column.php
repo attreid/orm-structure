@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm\Structure;
 
@@ -244,7 +244,7 @@ class Column
 	/**
 	 * Nastavi autoIncrement
 	 */
-	public function setAutoIncrement()
+	public function setAutoIncrement(): void
 	{
 		$this->default = 'NOT null AUTO_INCREMENT';
 		$this->table->setAutoIncrement(1);

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm\Structure;
 
@@ -43,7 +43,7 @@ class Key
 	/**
 	 * @param string $name
 	 */
-	protected function setName(string $name)
+	protected function setName(string $name): void
 	{
 		$this->name = $name;
 	}
@@ -60,7 +60,7 @@ class Key
 	 * @param int $index
 	 * @param string $name
 	 */
-	public function addColumn(int $index, string $name)
+	public function addColumn(int $index, string $name): void
 	{
 		$this->columns[$index] = $name;
 	}
@@ -76,7 +76,7 @@ class Key
 	/**
 	 * @param string $type
 	 */
-	protected function setType(string $type)
+	protected function setType(string $type): void
 	{
 		$this->type = $type;
 	}
@@ -92,7 +92,7 @@ class Key
 	/**
 	 * @param bool $unique
 	 */
-	protected function setUnique(bool $unique)
+	protected function setUnique(bool $unique): void
 	{
 		$this->unique = $unique;
 	}

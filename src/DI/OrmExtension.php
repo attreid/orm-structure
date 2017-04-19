@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Nattreid\Orm\DI;
 
@@ -27,7 +27,7 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		'autoManageDb' => true
 	];
 
-	public function loadConfiguration()
+	public function loadConfiguration(): void
 	{
 		$config = $this->validateConfig($this->defaults, $this->getConfig());
 
