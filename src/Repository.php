@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm;
 
@@ -21,7 +21,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 		$this->init();
 	}
 
-	protected function init()
+	protected function init(): void
 	{
 
 	}
