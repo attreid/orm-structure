@@ -193,9 +193,19 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param string $column
 	 * @return int
 	 */
-	public function getMaxPosition(string $column): int
+	public function getMax(string $column): int
 	{
-		return $this->connection->query('SELECT IFnull(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
+		return $this->connection->query('SELECT IFNULL(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
+	}
+
+	/**
+	 * Vrati nejmensi pozici
+	 * @param string $column
+	 * @return int
+	 */
+	public function getMin(string $column): int
+	{
+		return $this->connection->query('SELECT IFNULL(MIN(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
 	}
 
 	/**
