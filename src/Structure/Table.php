@@ -255,8 +255,8 @@ class Table implements Serializable
 					unset($keys[$name]);
 					continue;
 				}
-				$drop[] = "INDEX [$name]";
 			}
+			$drop[] = "INDEX [$name]";
 		}
 		if (!empty($keys)) {
 			$add = array_merge($add, $keys);
