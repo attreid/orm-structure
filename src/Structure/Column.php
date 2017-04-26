@@ -75,37 +75,48 @@ class Column
 	 */
 	public function bool(): self
 	{
-		$this->type = 'tinyint(1)';
-		return $this;
+		return $this->tinyint(1);
 	}
 
 	/**
-	 * Nastavi hodnotu sloupce na unikatni
+	 * Nastavi typ na bit
 	 * @return self
 	 */
-	public function setUnique(): self
+	public function bit(int $size): self
 	{
-		$this->table->addUnique($this->name);
+		$this->type = 'bit(' . $size . ')';
 		return $this;
 	}
 
 	/**
-	 * Nastavi klic
+	 * Nastavi typ na tinyint
 	 * @return self
 	 */
-	public function setKey(): self
+	public function tinyint($size = 4): self
 	{
-		$this->table->addKey($this->name);
+		$this->type = 'tinyint(' . $size . ')';
 		return $this;
 	}
 
 	/**
-	 * Nastave jako fulltext
-	 * @return $this
+	 * Nastavi typ na smallint
+	 * @param int $size
+	 * @return self
 	 */
-	public function setFulltext(): self
+	public function smallint(int $size = 6): self
 	{
-		$this->table->addFulltext($this->name);
+		$this->type = 'smallint(' . $size . ')';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na mediumint
+	 * @param int $size
+	 * @return self
+	 */
+	public function mediumint(int $size = 8): self
+	{
+		$this->type = 'mediumint(' . $size . ')';
 		return $this;
 	}
 
@@ -125,7 +136,7 @@ class Column
 	 * @param int $size
 	 * @return self
 	 */
-	public function bigint(int $size = 15): self
+	public function bigint(int $size = 20): self
 	{
 		$this->type = 'bigint(' . $size . ')';
 		return $this;
@@ -156,34 +167,14 @@ class Column
 	}
 
 	/**
-	 * Nastavi typ na varchar
-	 * @param int $size
+	 * Nastavi typ na double
+	 * @param int $total
+	 * @param int $decimal
 	 * @return self
 	 */
-	public function varChar(int $size = 255): self
+	public function double(int $total, int $decimal): self
 	{
-		$this->type = 'varchar(' . $size . ') COLLATE ' . $this->table->collate;
-		return $this;
-	}
-
-	/**
-	 * Nastavi typ na char
-	 * @param int $size
-	 * @return self
-	 */
-	public function char(int $size = 36): self
-	{
-		$this->type = 'char(' . $size . ') COLLATE ' . $this->table->collate;
-		return $this;
-	}
-
-	/**
-	 * Nastavi typ na text
-	 * @return self
-	 */
-	public function text(): self
-	{
-		$this->type = 'text COLLATE ' . $this->table->collate;
+		$this->type = 'double(' . $total . ',' . $decimal . ')';
 		return $this;
 	}
 
@@ -208,6 +199,31 @@ class Column
 	}
 
 	/**
+	 * Nastavi typ na time
+	 * @return self
+	 */
+	public function time(): self
+	{
+		$this->type = 'time';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na year
+	 * @return self
+	 */
+	public function year($size = 4): self
+	{
+		$this->type = 'year(' . $size . ')';
+		return $this;
+	}
+
+	private function stringOptions(?string $charset)
+	{
+		return ' ' . ($charset !== null ? 'CHARACTER SET ' . $charset . ' ' : '') . 'COLLATE ' . $this->table->collate;
+	}
+
+	/**
 	 * Nastavi typ na timestamp (pri vytvoreni se ulozi datum)
 	 * @param bool $onUpdate true = datum se zmeni pri zmene
 	 * @return self
@@ -217,6 +233,136 @@ class Column
 		$this->type = 'timestamp';
 		$this->default = 'NOT null DEFAULT CURRENT_TIMESTAMP' . ($onUpdate ? ' ON UPDATE CURRENT_TIMESTAMP' : '');
 		$this->setDefault('CURRENT_TIMESTAMP');
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na char
+	 * @param int $size
+	 * @param string|null $charset
+	 * @return self
+	 */
+	public function char(int $size = 36, string $charset = null): self
+	{
+		$this->type = 'char(' . $size . ')' . $this->stringOptions($charset);
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na varchar
+	 * @param int $size
+	 * @param string|null $charset
+	 * @return self
+	 */
+	public function varChar(int $size = 255, string $charset = null): self
+	{
+		$this->type = 'varchar(' . $size . ')' . $this->stringOptions($charset);
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na binary
+	 * @param int $size
+	 * @return self
+	 */
+	public function binary(int $size = 36): self
+	{
+		$this->type = 'binary(' . $size . ')';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na varbinary
+	 * @param int $size
+	 * @return self
+	 */
+	public function varbinary(int $size = 255): self
+	{
+		$this->type = 'varbinary(' . $size . ')';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na tinytext
+	 * @param string|null $charset
+	 * @return Column
+	 */
+	public function tinytext(string $charset = null): self
+	{
+		$this->type = 'tinytext' . $this->stringOptions($charset);
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na text
+	 * @param string|null $charset
+	 * @return Column
+	 */
+	public function text(string $charset = null): self
+	{
+		$this->type = 'text' . $this->stringOptions($charset);
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na mediumtext
+	 * @param string|null $charset
+	 * @return Column
+	 */
+	public function mediumtext(string $charset = null): self
+	{
+		$this->type = 'mediumtext' . $this->stringOptions($charset);
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na longtext
+	 * @param string|null $charset
+	 * @return Column
+	 */
+	public function longtext(string $charset = null): self
+	{
+		$this->type = 'longtext' . $this->stringOptions($charset);
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na tinyblob
+	 * @return Column
+	 */
+	public function tinyblob(): self
+	{
+		$this->type = 'tinyblob';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na blob
+	 * @return Column
+	 */
+	public function blob(): self
+	{
+		$this->type = 'blob';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na mediumblob
+	 * @return Column
+	 */
+	public function mediumblob(): self
+	{
+		$this->type = 'mediumblob';
+		return $this;
+	}
+
+	/**
+	 * Nastavi typ na longblob
+	 * @return Column
+	 */
+	public function longblob(): self
+	{
+		$this->type = 'longblob';
 		return $this;
 	}
 
@@ -257,6 +403,36 @@ class Column
 	public function setType(Column $column): self
 	{
 		$this->type = $column->type;
+		return $this;
+	}
+
+	/**
+	 * Nastavi hodnotu sloupce na unikatni
+	 * @return self
+	 */
+	public function setUnique(): self
+	{
+		$this->table->addUnique($this->name);
+		return $this;
+	}
+
+	/**
+	 * Nastavi klic
+	 * @return self
+	 */
+	public function setKey(): self
+	{
+		$this->table->addKey($this->name);
+		return $this;
+	}
+
+	/**
+	 * Nastave jako fulltext
+	 * @return $this
+	 */
+	public function setFulltext(): self
+	{
+		$this->table->addFulltext($this->name);
 		return $this;
 	}
 
