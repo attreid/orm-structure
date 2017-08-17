@@ -211,7 +211,7 @@ class Table implements Serializable
 	 */
 	private function modify(): void
 	{
-		$drop = $modify = $add = $primKey = [];
+		$dropKeys = $dropColumns = $modify = $add = $primKey = [];
 
 		// sloupce
 		$col = $this->columns;
@@ -224,7 +224,7 @@ class Table implements Serializable
 				}
 				unset($col[$name]);
 			} else {
-				$drop[] = "[$name]";
+				$dropColumns[] = "[$name]";
 			}
 		}
 		if (!empty($col)) {
@@ -238,7 +238,7 @@ class Table implements Serializable
 
 		if (!$this->primaryKey->equals($primKey)) {
 			if (!empty($primKey)) {
-				$drop[] = 'PRIMARY KEY';
+				$dropKeys[] = 'PRIMARY KEY';
 			}
 			if (!empty($this->primaryKey)) {
 				$add[] = $this->primaryKey;
@@ -256,7 +256,7 @@ class Table implements Serializable
 					continue;
 				}
 			}
-			$drop[] = "INDEX [$name]";
+			$dropKeys[] = "INDEX [$name]";
 		}
 		if (!empty($keys)) {
 			$add = array_merge($add, $keys);
@@ -272,10 +272,15 @@ class Table implements Serializable
 					continue;
 				}
 			}
-			$drop[] = "FOREIGN KEY [$name]";
+			$dropKeys[] = "FOREIGN KEY [$name]";
 		}
 		if (!empty($constraints)) {
 			$add = array_merge($add, $constraints);
+		}
+
+		// drop keys
+		if (!empty($dropKeys)) {
+			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $dropKeys), $this->name);
 		}
 
 		// modify
@@ -283,14 +288,16 @@ class Table implements Serializable
 			$this->connection->query("ALTER TABLE %table MODIFY " . implode(', MODIFY ', $modify), $this->name);
 		}
 
-		// drop
-		if (!empty($drop)) {
-			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $drop), $this->name);
+		// drop columns
+		if (!empty($dropColumns)) {
+			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $dropColumns), $this->name);
 		}
 
 		// add
 		if (!empty($add)) {
+			$this->connection->query('SET foreign_key_checks = 1');
 			$this->connection->query("ALTER TABLE %table ADD " . implode(', ADD ', $add), $this->name);
+			$this->connection->query('SET foreign_key_checks = 0');
 		}
 	}
 
@@ -348,8 +355,8 @@ class Table implements Serializable
 	 * Nastavi cizi klic
 	 * @param string $name
 	 * @param string|Table $mapperClass klic uz musi byt v tabulce nastaven
-	 * @param mixed $onDelete false => NO ACTION, true => CASCADE, null => SET null
-	 * @param mixed $onUpdate false => NO ACTION, true => CASCADE, null => SET null
+	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET null
+	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET null
 	 * @return Column
 	 */
 	public function addForeignKey(string $name, $mapperClass, $onDelete = true, $onUpdate = false): Column

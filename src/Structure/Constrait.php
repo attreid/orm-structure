@@ -6,6 +6,7 @@ namespace NAttreid\Orm\Structure;
 
 use Nette\SmartObject;
 use Nextras\Dbal\Result\Row;
+use Tracy\Debugger;
 
 /**
  * Class Constrait
@@ -45,8 +46,8 @@ class Constrait
 	 * @param string $key
 	 * @param Table $table
 	 * @param Table $referenceTable
-	 * @param mixed $onDelete false => NO ACTION, true => CASCADE, null => SET NULL
-	 * @param mixed $onUpdate false => NO ACTION, true => CASCADE, null => SET NULL
+	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET NULL
+	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET NULL
 	 */
 	public function __construct(string $key, Table $table, Table $referenceTable, $onDelete = true, $onUpdate = false)
 	{
@@ -94,7 +95,7 @@ class Constrait
 	private function prepareOnChange($value): string
 	{
 		if ($value === false) {
-			return 'NO ACTION';
+			return 'RESTRICT';
 		} elseif ($value === null) {
 			return 'SET NULL';
 		} else {
