@@ -1,12 +1,11 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm\Structure;
 
 use Nette\SmartObject;
 use Nextras\Dbal\Result\Row;
-use Tracy\Debugger;
 
 /**
  * Class Constrait

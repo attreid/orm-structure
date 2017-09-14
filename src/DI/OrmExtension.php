@@ -42,7 +42,7 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 		}
 
 		$builder->addDefinition($this->prefix('mapperManager'))
-			->setClass(MapperManager::class)
+			->setType(MapperManager::class)
 			->setArguments([
 				'useCamelCase' => $config['useCamelCase'],
 				'autoManageDb' => $config['autoManageDb']
