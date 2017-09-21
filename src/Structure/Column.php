@@ -285,7 +285,7 @@ class Column
 	/**
 	 * Nastavi typ na tinytext
 	 * @param string|null $charset
-	 * @return Column
+	 * @return self
 	 */
 	public function tinytext(string $charset = null): self
 	{
@@ -296,7 +296,7 @@ class Column
 	/**
 	 * Nastavi typ na text
 	 * @param string|null $charset
-	 * @return Column
+	 * @return self
 	 */
 	public function text(string $charset = null): self
 	{
@@ -307,7 +307,7 @@ class Column
 	/**
 	 * Nastavi typ na mediumtext
 	 * @param string|null $charset
-	 * @return Column
+	 * @return self
 	 */
 	public function mediumtext(string $charset = null): self
 	{
@@ -318,7 +318,7 @@ class Column
 	/**
 	 * Nastavi typ na longtext
 	 * @param string|null $charset
-	 * @return Column
+	 * @return self
 	 */
 	public function longtext(string $charset = null): self
 	{
@@ -328,7 +328,7 @@ class Column
 
 	/**
 	 * Nastavi typ na tinyblob
-	 * @return Column
+	 * @return self
 	 */
 	public function tinyblob(): self
 	{
@@ -338,7 +338,7 @@ class Column
 
 	/**
 	 * Nastavi typ na blob
-	 * @return Column
+	 * @return self
 	 */
 	public function blob(): self
 	{
@@ -348,7 +348,7 @@ class Column
 
 	/**
 	 * Nastavi typ na mediumblob
-	 * @return Column
+	 * @return self
 	 */
 	public function mediumblob(): self
 	{
@@ -358,7 +358,7 @@ class Column
 
 	/**
 	 * Nastavi typ na longblob
-	 * @return Column
+	 * @return self
 	 */
 	public function longblob(): self
 	{
@@ -389,16 +389,18 @@ class Column
 
 	/**
 	 * Nastavi autoIncrement
+	 * @return self
 	 */
-	public function setAutoIncrement(): void
+	public function setAutoIncrement(): self
 	{
 		$this->default = 'NOT null AUTO_INCREMENT';
 		$this->table->setAutoIncrement(1);
+		return $this;
 	}
 
 	/**
 	 * @param Column $column
-	 * @return $this
+	 * @return self
 	 */
 	public function setType(Column $column): self
 	{
@@ -428,7 +430,7 @@ class Column
 
 	/**
 	 * Nastave jako fulltext
-	 * @return $this
+	 * @return self
 	 */
 	public function setFulltext(): self
 	{
