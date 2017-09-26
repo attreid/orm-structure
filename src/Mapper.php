@@ -6,6 +6,7 @@ namespace NAttreid\Orm;
 
 use NAttreid\Orm\Structure\Table;
 use NAttreid\Utils\Arrays;
+use NAttreid\Utils\Strings;
 use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
 use Nextras\Dbal\Connection;
@@ -82,6 +83,17 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	}
 
 	/**
+	 * Upravi retezec pro pouziti v MATCH AGAINST
+	 * @param string $text
+	 * @return string
+	 */
+	protected function prepareFulltext(string $text): string
+	{
+		$text = Strings::replace($text, '/\(|\)|@|\*/', '');
+		return "*$text*";
+	}
+
+	/**
 	 * Vrati predponu nazvu tabulky
 	 * @return string
 	 */
@@ -151,9 +163,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	protected function insert(array $data): void
 	{
 		if (Arrays::isMultidimensional($data)) {
-			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values[]', $data);
+			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %VALUES[]', $data);
 		} else {
-			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);
+			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %VALUES', $data);
 		}
 
 	}
@@ -174,12 +186,12 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 		if ($nextEntity !== null && $entity->$column > $nextEntity->$column) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
-				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
+				$connection->query('UPDATE %TABLE SET %COLUMN = %COLUMN + 1 WHERE %COLUMN BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
 			});
 			$entity->$column = $nextEntity->$column;
 		} elseif ($prevEntity !== null) {
 			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
-				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
+				$connection->query('UPDATE %TABLE SET %COLUMN = %COLUMN - 1 WHERE %COLUMN BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
 			});
 			$entity->$column = $prevEntity->$column;
 		} else {
@@ -195,7 +207,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	public function getMax(string $column): int
 	{
-		return $this->connection->query('SELECT IFNULL(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
+		return $this->connection->query('SELECT IFNULL(MAX(%COLUMN), 0) position FROM %TABLE', $column, $this->getTableName())->fetch()->position;
 	}
 
 	/**
@@ -205,7 +217,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	public function getMin(string $column): int
 	{
-		return $this->connection->query('SELECT IFNULL(MIN(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
+		return $this->connection->query('SELECT IFNULL(MIN(%COLUMN), 0) position FROM %TABLE', $column, $this->getTableName())->fetch()->position;
 	}
 
 	/**
