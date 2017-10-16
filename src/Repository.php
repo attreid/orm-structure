@@ -32,7 +32,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	 */
 	public function fetchPairsByName(): array
 	{
-		return $this->findAll()->orderBy('name')->fetchPairs('id', 'name');
+		return $this->findAll()->resetOrderBy()->orderBy('name')->fetchPairs('id', 'name');
 	}
 
 	/**
@@ -41,7 +41,7 @@ abstract class Repository extends \Nextras\Orm\Repository\Repository
 	 */
 	public function fetchPairsById(): array
 	{
-		return $this->findAll()->orderBy('id')->fetchPairs('id', 'name');
+		return $this->findAll()->resetOrderBy()->orderBy('id')->fetchPairs('id', 'name');
 	}
 
 	/**
