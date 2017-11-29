@@ -10,6 +10,7 @@ use Nette\DI\Container;
 use Nette\SmartObject;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\Result\Result;
+use Nextras\Dbal\Result\Row;
 use Nextras\Dbal\Utils\FileImporter;
 use Serializable;
 
@@ -21,12 +22,16 @@ use Serializable;
  * @property-read Column[] $columns
  * @property-read PrimaryKey $primaryKey
  * @property-read bool $useCamelCase
+ * @property-read string $collate
  *
  * @author Attreid <attreid@gmail.com>
  */
 class Table implements Serializable
 {
 	use SmartObject;
+
+	/** @var string */
+	private $database;
 
 	/** @var string */
 	private $name;
@@ -47,7 +52,7 @@ class Table implements Serializable
 	private $charset = 'utf8';
 
 	/** @var string */
-	public $collate = 'utf8_czech_ci';
+	private $collate = 'utf8_czech_ci';
 
 	/** @var Column[] */
 	private $columns = [];
@@ -78,6 +83,7 @@ class Table implements Serializable
 
 	public function __construct(string $name, string $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
 	{
+		$this->database = $connection->getConfig()['database'];
 		$this->name = $name;
 		$this->prefix = $prefix;
 		$this->connection = $connection;
@@ -107,6 +113,14 @@ class Table implements Serializable
 	protected function getColumns(): array
 	{
 		return $this->columns;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getCollate(): string
+	{
+		return $this->collate;
 	}
 
 	/**
@@ -181,7 +195,8 @@ class Table implements Serializable
 				FileImporter::executeFile($this->connection, $this->defaultDataFile);
 			}
 		} else {
-			$this->modify();
+			$this->modifyColumnsAndKeys();
+			$this->modifyTable();
 		}
 		foreach ($this->relationTables as $table) {
 			$table->check();
@@ -209,7 +224,24 @@ class Table implements Serializable
 	/**
 	 * Upravi tabulku
 	 */
-	private function modify(): void
+	private function modifyTable(): void
+	{
+		$table = $this->getTableSchema();
+		if ($table->ENGINE !== $this->engine) {
+			$this->connection->query("ALTER TABLE %table ENGINE " . $this->engine, $this->name);
+		}
+		if ($table->CHARACTER_SET_NAME !== $this->charset) {
+			$this->connection->query("ALTER TABLE %table DEFAULT CHARSET " . $this->charset, $this->name);
+		}
+		if ($table->COLLATION_NAME !== $this->collate) {
+			$this->connection->query("ALTER TABLE %table COLLATE " . $this->collate, $this->name);
+		}
+	}
+
+	/**
+	 * Upravi klice a sloupce tabulky
+	 */
+	private function modifyColumnsAndKeys(): void
 	{
 		$dropKeys = $dropColumns = $modify = $add = $primKey = [];
 
@@ -409,7 +441,7 @@ class Table implements Serializable
 	 * @param  string ...$name
 	 * @return self
 	 */
-	public function addKey(string...$name): self
+	public function addKey(string ...$name): self
 	{
 		$key = new Index(...$name);
 		$this->keys[$key->name] = $key;
@@ -421,7 +453,7 @@ class Table implements Serializable
 	 * @param  string ...$key
 	 * @return self
 	 */
-	public function setPrimaryKey(string...$key): self
+	public function setPrimaryKey(string ...$key): self
 	{
 		$this->primaryKey = new PrimaryKey($this, ...$key);
 		return $this;
@@ -458,27 +490,48 @@ class Table implements Serializable
 	}
 
 	/**
-	 * Pripravy cizi klice
+	 * Vrati schema tabulky
+	 * @return Row|null
+	 */
+	private function getTableSchema(): ?Row
+	{
+		return $this->connection->query("
+			SELECT 
+				[tab.ENGINE],
+				[col.COLLATION_NAME],
+				[col.CHARACTER_SET_NAME]
+			FROM [information_schema.TABLES] tab
+			JOIN [information_schema.COLLATION_CHARACTER_SET_APPLICABILITY] col ON [tab.TABLE_COLLATION] = [col.COLLATION_NAME]
+			WHERE [tab.TABLE_SCHEMA] = %s
+				AND [tab.TABLE_NAME] = %s",
+			$this->database,
+			$this->name)->fetch();
+	}
+
+	/**
+	 * Vrati schema cizich klicu
 	 * @return Result|null
 	 */
 	private function getConstraits(): ?Result
 	{
 		return $this->connection->query("
 			SELECT 
-				col.CONSTRAINT_NAME,
-				col.COLUMN_NAME,
-				col.REFERENCED_TABLE_NAME,
-				col.REFERENCED_COLUMN_NAME,
-				ref.UPDATE_RULE,
-				ref.DELETE_RULE
-			FROM information_schema.REFERENTIAL_CONSTRAINTS ref
-			JOIN information_schema.KEY_COLUMN_USAGE col ON ref.CONSTRAINT_NAME = col.CONSTRAINT_NAME
-			WHERE ref.TABLE_NAME = %s",
+				[col.CONSTRAINT_NAME],
+				[col.COLUMN_NAME],
+				[col.REFERENCED_TABLE_NAME],
+				[col.REFERENCED_COLUMN_NAME],
+				[ref.UPDATE_RULE],
+				[ref.DELETE_RULE]
+			FROM [information_schema.REFERENTIAL_CONSTRAINTS] ref
+			JOIN [information_schema.KEY_COLUMN_USAGE] col ON [ref.CONSTRAINT_NAME] = [col.CONSTRAINT_NAME]
+			WHERE [ref.UNIQUE_CONSTRAINT_SCHEMA] = %s
+				AND [ref.TABLE_NAME] = %s",
+			$this->database,
 			$this->name);
 	}
 
 	/**
-	 * Pripravy klice
+	 * Vrati schema klicu
 	 * @return Key[]
 	 */
 	private function getKeys(): array
@@ -487,14 +540,18 @@ class Table implements Serializable
 		$result = [];
 		$rows = $this->connection->query("
 			SELECT 
-				INDEX_NAME,
-				COLUMN_NAME,
-				INDEX_TYPE,
-				NON_UNIQUE,
-				SEQ_IN_INDEX
-			FROM information_schema.STATISTICS 
-			WHERE TABLE_NAME = %s AND INDEX_NAME != %s",
-			$this->name, 'PRIMARY');
+				[INDEX_NAME],
+				[COLUMN_NAME],
+				[INDEX_TYPE],
+				[NON_UNIQUE],
+				[SEQ_IN_INDEX]
+			FROM [information_schema.STATISTICS] 
+			WHERE [TABLE_SCHEMA] = %s
+				AND [TABLE_NAME] = %s 
+				AND [INDEX_NAME] != %s",
+			$this->database,
+			$this->name,
+			'PRIMARY');
 		foreach ($rows as $row) {
 			$name = $row->INDEX_NAME;
 			if (isset($result[$name])) {
