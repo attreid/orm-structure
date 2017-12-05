@@ -183,7 +183,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @throws QueryException
 	 * @throws DriverException
 	 */
-	public function changeSort(string $column, $id, $prevId, $nextId): void
+	public function changeSort(string $column, int $id, ?int $prevId, ?int $nextId): void
 	{
 		$repo = $this->getRepository();
 		$entity = $repo->getById($id);
