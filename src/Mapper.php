@@ -10,6 +10,7 @@ use NAttreid\Utils\Strings;
 use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
 use Nextras\Dbal\Connection;
+use Nextras\Dbal\DriverException;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\QueryException;
 use Nextras\Dbal\Result\Result;
@@ -179,7 +180,8 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param int $id
 	 * @param int $prevId
 	 * @param int $nextId
-	 * @throws \Exception
+	 * @throws QueryException
+	 * @throws DriverException
 	 */
 	public function changeSort(string $column, $id, $prevId, $nextId): void
 	{
@@ -189,14 +191,22 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$nextEntity = $repo->getById($nextId);
 
 		if ($nextEntity !== null && $entity->$column > $nextEntity->$column) {
-			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
-				$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
-			});
+			try {
+				$this->connection->transactional(function (Connection $connection) use ($column, $entity, $nextEntity) {
+					$connection->query('UPDATE %table SET %column = %column + 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $nextEntity->$column, $entity->$column);
+				});
+			} catch (\Exception $ex) {
+				throw new $ex;
+			}
 			$entity->$column = $nextEntity->$column;
 		} elseif ($prevEntity !== null) {
-			$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
-				$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
-			});
+			try {
+				$this->connection->transactional(function (Connection $connection) use ($column, $entity, $prevEntity) {
+					$connection->query('UPDATE %table SET %column = %column - 1 WHERE %column BETWEEN %i AND %i', $this->getTableName(), $column, $column, $column, $entity->$column, $prevEntity->$column);
+				});
+			} catch (\Exception $ex) {
+				throw new $ex;
+			}
 			$entity->$column = $prevEntity->$column;
 		} else {
 			$entity->$column = 1;
