@@ -11,6 +11,7 @@ use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
+use Nextras\Dbal\QueryException;
 use Nextras\Dbal\Result\Result;
 use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
@@ -66,6 +67,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * Vrati vysledek dotazu
 	 * @param QueryBuilder $builder
 	 * @return Result|null
+	 * @throws QueryException
 	 */
 	protected function execute(QueryBuilder $builder): ?Result
 	{
@@ -159,6 +161,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * INSERT
 	 * @param array $data
+	 * @throws QueryException
 	 */
 	protected function insert(array $data): void
 	{
@@ -176,6 +179,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * @param int $id
 	 * @param int $prevId
 	 * @param int $nextId
+	 * @throws \Exception
 	 */
 	public function changeSort(string $column, $id, $prevId, $nextId): void
 	{
@@ -204,6 +208,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * Vrati nejvetsi pozici
 	 * @param string $column
 	 * @return int
+	 * @throws QueryException
 	 */
 	public function getMax(string $column): int
 	{
@@ -214,6 +219,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 * Vrati nejmensi pozici
 	 * @param string $column
 	 * @return int
+	 * @throws QueryException
 	 */
 	public function getMin(string $column): int
 	{
@@ -222,6 +228,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 	/**
 	 * Smaze data v tabulce
+	 * @throws QueryException
 	 */
 	public function truncate(): void
 	{

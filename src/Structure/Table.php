@@ -9,6 +9,7 @@ use NAttreid\Orm\Mapper;
 use Nette\DI\Container;
 use Nette\SmartObject;
 use Nextras\Dbal\Connection;
+use Nextras\Dbal\QueryException;
 use Nextras\Dbal\Result\Result;
 use Nextras\Dbal\Result\Row;
 use Nextras\Dbal\Utils\FileImporter;
@@ -182,6 +183,7 @@ class Table implements Serializable
 	/**
 	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
 	 * @return bool pokud je vytvorena vrati true
+	 * @throws QueryException
 	 */
 	public function check(): bool
 	{
@@ -207,6 +209,7 @@ class Table implements Serializable
 
 	/**
 	 * Vytvori tabulku
+	 * @throws QueryException
 	 */
 	private function create(): void
 	{
@@ -223,6 +226,7 @@ class Table implements Serializable
 
 	/**
 	 * Upravi tabulku
+	 * @throws QueryException
 	 */
 	private function modifyTable(): void
 	{
@@ -240,6 +244,7 @@ class Table implements Serializable
 
 	/**
 	 * Upravi klice a sloupce tabulky
+	 * @throws QueryException
 	 */
 	private function modifyColumnsAndKeys(): void
 	{
@@ -492,6 +497,7 @@ class Table implements Serializable
 	/**
 	 * Vrati schema tabulky
 	 * @return Row|null
+	 * @throws QueryException
 	 */
 	private function getTableSchema(): ?Row
 	{
@@ -511,6 +517,7 @@ class Table implements Serializable
 	/**
 	 * Vrati schema cizich klicu
 	 * @return Result|null
+	 * @throws QueryException
 	 */
 	private function getConstraits(): ?Result
 	{
@@ -533,6 +540,7 @@ class Table implements Serializable
 	/**
 	 * Vrati schema klicu
 	 * @return Key[]
+	 * @throws QueryException
 	 */
 	private function getKeys(): array
 	{
