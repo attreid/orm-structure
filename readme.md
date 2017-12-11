@@ -70,6 +70,18 @@ class ExampleMapper extends \NAttreid\Orm\Mapper {
         $relationTable->addForeignKey('exampleId', $table);
         $relationTable->addForeignKey('otherId', OtherMapper::class);
         $relationTable->setPrimaryKey('exampleId', 'otherId');
+
+        // migrace 
+        if (!$relationTable->exists) {
+            $table->migration[] = function (Row $row, Connection $connection) use ($relationTable) {
+                if (isset($row->oldColumnId)) {
+                    $connection->query('INSERT INTO %table %values', $relationTable->name, [
+                        'exampleId' => $row->id,
+                        'otherId' => $row->oldColumnId
+                    ]);
+                }
+            };
+        }
         
         $this->onCreateTable[] = function () {
             $this->insert([

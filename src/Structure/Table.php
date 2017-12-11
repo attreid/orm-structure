@@ -24,12 +24,19 @@ use Serializable;
  * @property-read PrimaryKey $primaryKey
  * @property-read bool $useCamelCase
  * @property-read string $collate
+ * @property-read bool $exists
  *
  * @author Attreid <attreid@gmail.com>
  */
 class Table implements Serializable
 {
 	use SmartObject;
+
+	/**
+	 * Add migration function function (\Nextras\Dbal\Result\Row, \Nextras\Dbal\Connection)
+	 * @var callable[]
+	 */
+	public $migration = [];
 
 	/** @var string */
 	private $database;
@@ -125,6 +132,26 @@ class Table implements Serializable
 	}
 
 	/**
+	 * @return bool
+	 * @throws QueryException
+	 */
+	protected function isExists(): bool
+	{
+		return $this->exists($this->name);
+	}
+
+	/**
+	 * @param string $table
+	 * @return bool
+	 * @throws QueryException
+	 */
+	public function exists(string $table): bool
+	{
+		$result = $this->connection->query("SHOW TABLES LIKE %s", $table)->fetch();
+		return $result ? true : false;
+	}
+
+	/**
 	 * Nastavi engine (default=InnoDB)
 	 * @param string $engine
 	 * @return self
@@ -189,19 +216,19 @@ class Table implements Serializable
 	{
 		$isNew = false;
 		$this->connection->query('SET foreign_key_checks = 0');
-		$exist = $this->connection->query("SHOW TABLES LIKE %s", $this->name)->fetch();
-		if (!$exist) {
+		if (!$this->exists) {
 			$this->create();
 			$isNew = true;
 			if ($this->defaultDataFile !== null) {
 				FileImporter::executeFile($this->connection, $this->defaultDataFile);
 			}
+
+			foreach ($this->relationTables as $table) {
+				$table->check();
+			}
 		} else {
 			$this->modifyColumnsAndKeys();
 			$this->modifyTable();
-		}
-		foreach ($this->relationTables as $table) {
-			$table->check();
 		}
 		$this->connection->query('SET foreign_key_checks = 1');
 		return $isNew;
@@ -325,16 +352,28 @@ class Table implements Serializable
 			$this->connection->query("ALTER TABLE %table MODIFY " . implode(', MODIFY ', $modify), $this->name);
 		}
 
-		// drop columns
-		if (!empty($dropColumns)) {
-			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $dropColumns), $this->name);
-		}
-
 		// add
 		if (!empty($add)) {
 			$this->connection->query('SET foreign_key_checks = 1');
 			$this->connection->query("ALTER TABLE %table ADD " . implode(', ADD ', $add), $this->name);
 			$this->connection->query('SET foreign_key_checks = 0');
+		}
+
+		// check relation tables
+		foreach ($this->relationTables as $table) {
+			$table->check();
+		}
+
+		foreach ($this->migration as $func) {
+			$result = $this->connection->query('SELECT * FROM %table', $this->name);
+			foreach ($result as $row) {
+				$func($row, $this->connection);
+			}
+		}
+
+		// drop columns
+		if (!empty($dropColumns)) {
+			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $dropColumns), $this->name);
 		}
 	}
 
