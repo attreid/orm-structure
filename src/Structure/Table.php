@@ -569,7 +569,7 @@ class Table implements Serializable
 				[ref.UPDATE_RULE],
 				[ref.DELETE_RULE]
 			FROM [information_schema.REFERENTIAL_CONSTRAINTS] ref
-			JOIN [information_schema.KEY_COLUMN_USAGE] col ON [ref.CONSTRAINT_NAME] = [col.CONSTRAINT_NAME]
+			JOIN [information_schema.KEY_COLUMN_USAGE] col ON [ref.CONSTRAINT_NAME] = [col.CONSTRAINT_NAME] AND [ref.CONSTRAINT_SCHEMA] = [col.CONSTRAINT_SCHEMA]
 			WHERE [ref.UNIQUE_CONSTRAINT_SCHEMA] = %s
 				AND [ref.TABLE_NAME] = %s",
 			$this->database,
