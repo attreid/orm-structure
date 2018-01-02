@@ -92,7 +92,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	protected function prepareFulltext(string $text): string
 	{
-		$text = Strings::replace($text, '/\(|\)|@|\*|-|\+/', '');
+		$text = Strings::replace($text, '/\(|\)|@|\*|-|\+<|>/', '');
 		return "*$text*";
 	}
 
