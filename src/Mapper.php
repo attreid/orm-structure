@@ -11,10 +11,12 @@ use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\DriverException;
+use Nextras\Dbal\IConnection;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\QueryException;
 use Nextras\Dbal\Result\Result;
 use Nextras\Orm\Entity\IEntity;
+use Nextras\Orm\Mapper\Dbal\DbalMapperCoordinator;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\StorageReflection;
 
@@ -35,9 +37,10 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var MapperManager */
 	private $manager;
 
-	public function __construct(Connection $connection, Cache $cache, MapperManager $manager)
+
+	public function __construct(IConnection $connection, DbalMapperCoordinator $mapperCoordinator, Cache $cache, MapperManager $manager)
 	{
-		parent::__construct($connection, $cache);
+		parent::__construct($connection, $mapperCoordinator, $cache);
 		$this->manager = $manager;
 		$this->table = $this->checkTable();
 	}
@@ -47,7 +50,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	{
 		if ($this->manager->useCamelCase) {
 			if (!$this->tableName) {
-				$this->tableName = str_replace('Mapper', '', lcfirst($this->getReflection()->getShortName()));
+				$this->tableName = str_replace('Mapper', '', lcfirst((new \ReflectionClass($this))->getShortName()));
 			}
 		} else {
 			parent::getTableName();
@@ -73,16 +76,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	protected function execute(QueryBuilder $builder): ?Result
 	{
 		return $this->connection->queryArgs($builder->getQuerySql(), $builder->getQueryParameters());
-	}
-
-	/**
-	 * Vrati entitu dotazu
-	 * @param QueryBuilder $builder
-	 * @return IEntity|null
-	 */
-	protected function fetch(QueryBuilder $builder): ?IEntity
-	{
-		return $this->toCollection($builder)->fetch();
 	}
 
 	/**
@@ -116,7 +109,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		if ($this->manager->hasher === null) {
 			throw new MissingServiceException('Hasher is missing');
 		}
-		return $this->fetch($this->manager->hasher->hashSQL($this->builder(), $column, $hash));
+		return $this->toEntity($this->manager->hasher->hashSQL($this->builder(), $column, $hash));
 	}
 
 	/**
