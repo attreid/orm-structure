@@ -440,13 +440,26 @@ class Column
 
 	/**
 	 * Porovnani sloupcu
-	 * @param string $column
+	 * @param Row $column
 	 * @return bool
 	 */
 	public function equals(Row $column): bool
 	{
 		$col = $this->prepareColumn($column);
 		return $col == "`$this->name` $this->type $this->default";
+	}
+
+	/**
+	 * Prejmenovani sloupcu
+	 * @param string[] ...$names
+	 * @return self
+	 */
+	public function renameFrom(string... $names): self
+	{
+		foreach ($names as $name) {
+			$this->table->addColumnToRename($name, $this);
+		}
+		return $this;
 	}
 
 	public function __toString()

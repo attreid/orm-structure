@@ -65,6 +65,9 @@ class Table implements Serializable
 	/** @var Column[] */
 	private $columns = [];
 
+	/** @var Column[] */
+	private $oldColumns = [];
+
 	/** @var PrimaryKey */
 	private $primaryKey;
 
@@ -208,6 +211,19 @@ class Table implements Serializable
 	}
 
 	/**
+	 * Zmena nazvu sloupce
+	 * @param string $name
+	 * @param Column $column
+	 * @internal
+	 * @return self
+	 */
+	public function addColumnToRename(string $name, Column $column): self
+	{
+		$this->oldColumns[$name] = $column;
+		return $this;
+	}
+
+	/**
 	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
 	 * @return bool pokud je vytvorena vrati true
 	 * @throws QueryException
@@ -227,6 +243,7 @@ class Table implements Serializable
 				$table->check();
 			}
 		} else {
+			$this->changeColumns();
 			$this->modifyColumnsAndKeys();
 			$this->modifyTable();
 		}
@@ -270,29 +287,46 @@ class Table implements Serializable
 	}
 
 	/**
+	 * Zmeni nazvy sloupcu tabulky
+	 * @throws QueryException
+	 */
+	private function changeColumns(): void
+	{
+		$change = [];
+		foreach ($this->oldColumns as $name => $column) {
+			if ($this->columnExists($name)) {
+				$change[] = "[$name] $column";
+			}
+		}
+		if (!empty($change)) {
+			$this->connection->query("ALTER TABLE %table CHANGE " . implode(', CHANGE ', $change), $this->name);
+		}
+	}
+
+	/**
 	 * Upravi klice a sloupce tabulky
 	 * @throws QueryException
 	 */
 	private function modifyColumnsAndKeys(): void
 	{
-		$dropKeys = $dropColumns = $modify = $add = $primKey = [];
+		$drop = $modify = $add = $primKey = [];
 
 		// sloupce
-		$col = $this->columns;
+		$columns = $this->columns;
 		foreach ($this->connection->query('SHOW FULL COLUMNS FROM %table', $this->name) as $column) {
 			$name = $column->Field;
 
-			if (isset($col[$name])) {
-				if (!$col[$name]->equals($column)) {
-					$modify[] = "$col[$name]";
+			if (isset($columns[$name])) {
+				if (!$columns[$name]->equals($column)) {
+					$modify[] = "$columns[$name]";
 				}
-				unset($col[$name]);
+				unset($columns[$name]);
 			} else {
-				$dropColumns[] = "[$name]";
+				$drop[] = "[$name]";
 			}
 		}
-		if (!empty($col)) {
-			$add[] = '(' . implode(",\n", $col) . ')';
+		if (!empty($columns)) {
+			$add[] = '(' . implode(",\n", $columns) . ')';
 		}
 
 		// primarni klic
@@ -302,7 +336,7 @@ class Table implements Serializable
 
 		if (!$this->primaryKey->equals($primKey)) {
 			if (!empty($primKey)) {
-				$dropKeys[] = 'PRIMARY KEY';
+				$drop[] = 'PRIMARY KEY';
 			}
 			if (!empty($this->primaryKey)) {
 				$add[] = $this->primaryKey;
@@ -320,7 +354,7 @@ class Table implements Serializable
 					continue;
 				}
 			}
-			$dropKeys[] = "INDEX [$name]";
+			$drop[] = "INDEX [$name]";
 		}
 		if (!empty($keys)) {
 			$add = array_merge($add, $keys);
@@ -336,15 +370,10 @@ class Table implements Serializable
 					continue;
 				}
 			}
-			$dropKeys[] = "FOREIGN KEY [$name]";
+			$drop[] = "FOREIGN KEY [$name]";
 		}
 		if (!empty($constraints)) {
 			$add = array_merge($add, $constraints);
-		}
-
-		// drop keys
-		if (!empty($dropKeys)) {
-			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $dropKeys), $this->name);
 		}
 
 		// modify
@@ -364,6 +393,7 @@ class Table implements Serializable
 			$table->check();
 		}
 
+		// migration
 		foreach ($this->migration as $func) {
 			$result = $this->connection->query('SELECT * FROM %table', $this->name);
 			foreach ($result as $row) {
@@ -371,9 +401,9 @@ class Table implements Serializable
 			}
 		}
 
-		// drop columns
-		if (!empty($dropColumns)) {
-			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $dropColumns), $this->name);
+		// drop
+		if (!empty($drop)) {
+			$this->connection->query("ALTER TABLE %table DROP " . implode(', DROP ', $drop), $this->name);
 		}
 	}
 
@@ -482,7 +512,7 @@ class Table implements Serializable
 
 	/**
 	 * Nastavi klic
-	 * @param  string ...$name
+	 * @param string[] ...$name
 	 * @return self
 	 */
 	public function addKey(string ...$name): self
@@ -494,7 +524,7 @@ class Table implements Serializable
 
 	/**
 	 * Nastavi primarni klic
-	 * @param  string ...$key
+	 * @param string[] ...$key
 	 * @return self
 	 */
 	public function setPrimaryKey(string ...$key): self
@@ -614,6 +644,20 @@ class Table implements Serializable
 			$result[$name] = $obj;
 		}
 		return $result;
+	}
+
+	private function columnExists(string $name): bool
+	{
+		$row = $this->connection->query("
+			SELECT COUNT([COLUMN_NAME]) num 
+				FROM [information_schema.COLUMNS] 
+				WHERE [TABLE_SCHEMA] = %s
+				AND [TABLE_NAME] = %s 
+				AND [COLUMN_NAME] = %s",
+			$this->database,
+			$this->name,
+			$name)->fetch();
+		return $row->num > 0 ? true : false;
 	}
 
 	public function serialize(): string
