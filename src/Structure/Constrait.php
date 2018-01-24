@@ -103,6 +103,27 @@ class Constrait
 	}
 
 	/**
+	 * Vrati hodnotu pro zmenu
+	 * @param string $value
+	 * @return string
+	 */
+	private function parseOnChange(string $value): string
+	{
+		switch ($value) {
+			default:
+			case 'NO ACTION':
+			case 'RESTRICT':
+				return 'RESTRICT';
+
+			case 'SET NULL':
+				return 'SET NULL';
+
+			case 'CASCADE':
+				return 'CASCADE';
+		}
+	}
+
+	/**
 	 * @param Row $row
 	 * @return bool
 	 */
@@ -130,7 +151,7 @@ class Constrait
 	 */
 	private function prepare(string $name, string $key, string $referenceTable, string $referenceKey, string $onDelete, string $onUpdate): string
 	{
-		return "CONSTRAINT [$name] FOREIGN KEY ([$key]) REFERENCES [$referenceTable] ([$referenceKey]) ON DELETE $onDelete ON UPDATE $onUpdate";
+		return "CONSTRAINT [$name] FOREIGN KEY ([$key]) REFERENCES [$referenceTable] ([$referenceKey]) ON DELETE {$this->parseOnChange($onDelete)} ON UPDATE {$this->parseOnChange($onUpdate)}";
 	}
 
 	public function __toString()
