@@ -177,13 +177,13 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/**
 	 * Zmeni razeni
 	 * @param string $column
-	 * @param int $id
-	 * @param int $prevId
-	 * @param int $nextId
+	 * @param mixed $id
+	 * @param mixed $prevId
+	 * @param mixed $nextId
 	 * @throws QueryException
 	 * @throws DriverException
 	 */
-	public function changeSort(string $column, int $id, ?int $prevId, ?int $nextId): void
+	public function changeSort(string $column, $id, $prevId, $nextId): void
 	{
 		$repo = $this->getRepository();
 		$entity = $repo->getById($id);
