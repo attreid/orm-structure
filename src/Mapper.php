@@ -37,7 +37,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var MapperManager */
 	private $manager;
 
-
 	public function __construct(IConnection $connection, DbalMapperCoordinator $mapperCoordinator, Cache $cache, MapperManager $manager)
 	{
 		parent::__construct($connection, $mapperCoordinator, $cache);
