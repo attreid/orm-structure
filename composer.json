@@ -14,7 +14,7 @@
   "require": {
     "php": ">= 7.1",
     "nette/di": "~2.4",
-    "nextras/orm": "~3.0-rc2",
+    "nextras/orm": "~3.0",
     "nattreid/utils": "~1.0"
   },
   "require-dev": {
