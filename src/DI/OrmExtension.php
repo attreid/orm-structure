@@ -7,8 +7,6 @@ namespace Nattreid\Orm\DI;
 use NAttreid\Orm\MapperManager;
 use NAttreid\Orm\Structure\ITableFactory;
 use NAttreid\Orm\Structure\Table;
-use Nextras\Orm\Entity\Reflection\MetadataParserFactory;
-use Nextras\Orm\InvalidStateException;
 use Nextras\Orm\Model\Model;
 
 /**
@@ -20,47 +18,45 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 {
 
 	private $defaults = [
-		'metadataParserFactory' => MetadataParserFactory::class,
-		'useCamelCase' => true,
-		'model' => null,
+		'model' => Model::class,
+
 		'add' => [],
+		'useCamelCase' => true,
 		'autoManageDb' => true
 	];
 
 	public function loadConfiguration(): void
 	{
+		$this->builder = $this->getContainerBuilder();
+
 		$config = $this->validateConfig($this->defaults, $this->getConfig());
+		$this->modelClass = $config['model'];
 
-		$builder = $this->getContainerBuilder();;
-		if ($config['model'] === null) {
-			throw new InvalidStateException('Model is not defined.');
-		}
+		$this->repositoryFinder = new PhpDocRepositoryFinder($this->modelClass, $this->builder, $this, $config['add']);
 
-		$repositories = $this->getRepositoryList($config['model']);
-		foreach ($config['add'] as $model) {
-			$repositories = array_merge($repositories, $this->getRepositoryList($model));
-		}
-
-		$builder->addDefinition($this->prefix('mapperManager'))
+		$this->builder->addDefinition($this->prefix('mapperManager'))
 			->setType(MapperManager::class)
 			->setArguments([
 				'useCamelCase' => $config['useCamelCase'],
 				'autoManageDb' => $config['autoManageDb']
 			]);
 
-		$builder->addDefinition($this->prefix('tableFactory'))
+		$this->builder->addDefinition($this->prefix('tableFactory'))
 			->setImplement(ITableFactory::class)
 			->setFactory(Table::class);
 
-		$repositoriesConfig = Model::getConfiguration($repositories);
+		$repositories = $this->repositoryFinder->loadConfiguration();
 
 		$this->setupCache();
 		$this->setupDependencyProvider();
-		$this->setupMetadataParserFactory($config['metadataParserFactory']);
-		$this->setupRepositoryLoader($repositories);
-		$this->setupMetadataStorage($repositoriesConfig);
-		$this->setupRepositoriesAndMappers($repositories);
-		$this->setupModel($config['model'], $repositoriesConfig);
+		$this->setupDbalMapperDependencies();
+		$this->setupMetadataParserFactory();
+
+		if ($repositories !== null) {
+			$repositoriesConfig = Model::getConfiguration($repositories);
+			$this->setupMetadataStorage($repositoriesConfig[2]);
+			$this->setupModel($this->modelClass, $repositoriesConfig);
+		}
 	}
 
 }
