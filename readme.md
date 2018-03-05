@@ -4,7 +4,7 @@ Nastavení **config.neon**
 ```neon
 extensions:
     dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
-    orm: Nattreid\Orm\DI\OrmExtension
+    orm: NAttreid\Orm\DI\OrmExtension
 
 dbal:
     dbal:

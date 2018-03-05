@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nattreid\Orm\DI;
+namespace NAttreid\Orm\DI;
 
 use Nette\DI\ContainerBuilder;
 use Nextras\Orm\Bridges\NetteDI\OrmExtension;

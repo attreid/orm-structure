@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nattreid\Orm\DI;
+namespace NAttreid\Orm\DI;
 
 use NAttreid\Orm\MapperManager;
 use NAttreid\Orm\Structure\ITableFactory;
