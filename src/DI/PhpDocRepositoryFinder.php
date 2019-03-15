@@ -23,7 +23,7 @@ class PhpDocRepositoryFinder extends \Nextras\Orm\Bridges\NetteDI\PhpDocReposito
 		$this->addModelClasses = $addModelClasses;
 	}
 
-	public function loadConfiguration()
+	public function loadConfiguration(): array
 	{
 		$repositories = $this->findRepositories($this->modelClass);
 		foreach ($this->addModelClasses as $addModelClass) {
