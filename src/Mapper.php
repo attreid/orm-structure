@@ -99,16 +99,16 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 	/**
 	 * Vrati radek podle hash sloupce
-	 * @param string $column
+	 * @param string|array $columns
 	 * @param string $hash
 	 * @return IEntity|null
 	 */
-	public function getByHash(string $column, string $hash): ?IEntity
+	public function getByHash($columns, string $hash): ?IEntity
 	{
 		if ($this->manager->hasher === null) {
 			throw new MissingServiceException('Hasher is missing');
 		}
-		return $this->toEntity($this->manager->hasher->hashSQL($this->builder(), $column, $hash));
+		return $this->toEntity($this->manager->hasher->hashSQL($this->builder(), $columns, $hash));
 	}
 
 	/**
