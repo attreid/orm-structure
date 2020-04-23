@@ -3,32 +3,33 @@
   "description": "Extension Nextras/ORM",
   "type": "library",
   "license": [
-    "MIT"
+	"MIT"
   ],
   "authors": [
-    {
-      "name": "Attreid",
-      "email": "attreid@gmail.com"
-    }
+	{
+	  "name": "Attreid",
+	  "email": "attreid@gmail.com"
+	}
   ],
   "require": {
-    "php": ">= 7.1",
-    "nette/di": "~3.0",
-    "nextras/orm": "~3.0",
-    "nattreid/utils": "~1.6"
+	"php": ">= 7.1",
+	"ext-json": "*",
+	"nette/di": "~2.4",
+	"nextras/orm": "~3.0",
+	"nattreid/utils": "~1.0"
   },
   "require-dev": {
-    "nette/tester": "~2.2",
-    "tracy/tracy": "~2.6"
+	"nette/tester": "~1.7",
+	"tracy/tracy": "~2.4"
   },
   "autoload": {
-    "classmap": [
-      "src/"
-    ]
+	"classmap": [
+	  "src/"
+	]
   },
   "extra": {
-    "branch-alias": {
-      "dev-master": "1.x-dev"
-    }
+	"branch-alias": {
+	  "dev-master": "1.x-dev"
+	}
   }
 }

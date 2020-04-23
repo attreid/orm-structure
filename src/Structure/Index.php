@@ -1,11 +1,12 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm\Structure;
 
 use InvalidArgumentException;
 use Nette\SmartObject;
+use Serializable;
 
 /**
  * Class Index
@@ -14,7 +15,7 @@ use Nette\SmartObject;
  *
  * @author Attreid <attreid@gmail.com>
  */
-class Index
+class Index implements Serializable
 {
 	use SmartObject;
 
@@ -87,7 +88,7 @@ class Index
 			$row->columns,
 			$prefix
 		);
-		return $key == $this->__toString();
+		return $key == $this->getDefinition();
 	}
 
 	/**
@@ -102,12 +103,29 @@ class Index
 		return ($prefix !== null ? $prefix . ' ' : '') . "KEY [$name] ($key)";
 	}
 
-	public function __toString()
+	public function getDefinition(): string
 	{
 		return $this->prepare(
 			$this->name,
 			$this->keys,
 			$this->prefix
 		);
+	}
+
+	public function serialize(): string
+	{
+		return json_encode([
+			'name' => $this->name,
+			'keys' => $this->keys,
+			'prefix' => $this->prefix
+		]);
+	}
+
+	public function unserialize($serialized): void
+	{
+		$data = json_decode($serialized);
+		$this->name = $data->name;
+		$this->keys = $data->keys;
+		$this->prefix = $data->prefix;
 	}
 }

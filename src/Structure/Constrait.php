@@ -6,16 +6,16 @@ namespace NAttreid\Orm\Structure;
 
 use Nette\SmartObject;
 use Nextras\Dbal\Result\Row;
+use Serializable;
 
 /**
  * Class Constrait
  *
  * @property-read string $name
- * @property-read Column $column
  *
  * @author Attreid <attreid@gmail.com>
  */
-class Constrait
+class Constrait implements Serializable
 {
 	use SmartObject;
 
@@ -25,11 +25,11 @@ class Constrait
 	/** @var string */
 	private $key;
 
-	/** @var Table */
-	private $table;
-
-	/** @var Table */
+	/** @var string */
 	private $referenceTable;
+
+	/** @var string */
+	private $referenceTablePrimaryKey;
 
 	/** @var bool|mixed */
 	private $onDelete;
@@ -37,35 +37,21 @@ class Constrait
 	/** @var bool|mixed */
 	private $onUpdate;
 
-	/** @var Column */
-	private $column;
-
 	/**
 	 * Constrait constructor.
 	 * @param string $key
-	 * @param Table $table
-	 * @param Table $referenceTable
+	 * @param string $tableName
+	 * @param string $referenceTable
+	 * @param string $referenceTablePrimaryKey
 	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET NULL
 	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET NULL
 	 */
-	public function __construct(string $key, Table $table, Table $referenceTable, $onDelete = true, $onUpdate = false)
+	public function __construct(string $key, string $tableName, string $referenceTable, string $referenceTablePrimaryKey, $onDelete = true, $onUpdate = false)
 	{
-		$column = $table->addColumn($key)
-			->setType($referenceTable->primaryKey->column);
-
-		if ($onDelete === null) {
-			$column->setDefault(null);
-		} else {
-			$column->setDefault();
-		}
-		$this->column = $column;
-
-		$table->addKey($key);
-
-		$this->name = 'fk_' . $table->name . '_' . $key . '_' . $referenceTable->name . '_' . $referenceTable->primaryKey->name;
+		$this->name = 'fk_' . $tableName . '_' . $key . '_' . $referenceTable . '_' . $referenceTablePrimaryKey;
 		$this->key = $key;
-		$this->table = $table;
 		$this->referenceTable = $referenceTable;
+		$this->referenceTablePrimaryKey = $referenceTablePrimaryKey;
 		$this->onDelete = $onDelete;
 		$this->onUpdate = $onUpdate;
 	}
@@ -76,14 +62,6 @@ class Constrait
 	protected function getName(): string
 	{
 		return $this->name;
-	}
-
-	/**
-	 * @return Column
-	 */
-	protected function getColumn(): Column
-	{
-		return $this->column;
 	}
 
 	/**
@@ -137,7 +115,7 @@ class Constrait
 			$row->DELETE_RULE,
 			$row->UPDATE_RULE
 		);
-		return $constrait == $this->__toString();
+		return $constrait == $this->getDefinition();
 	}
 
 	/**
@@ -154,15 +132,38 @@ class Constrait
 		return "CONSTRAINT [$name] FOREIGN KEY ([$key]) REFERENCES [$referenceTable] ([$referenceKey]) ON DELETE {$this->parseOnChange($onDelete)} ON UPDATE {$this->parseOnChange($onUpdate)}";
 	}
 
-	public function __toString()
+	public function getDefinition(): string
 	{
 		return $this->prepare(
 			$this->name,
 			$this->key,
-			$this->referenceTable->name,
-			$this->referenceTable->primaryKey->name,
+			$this->referenceTable,
+			$this->referenceTablePrimaryKey,
 			$this->prepareOnChange($this->onDelete),
 			$this->prepareOnChange($this->onUpdate)
 		);
+	}
+
+	public function serialize(): string
+	{
+		return json_encode([
+			'name' => $this->name,
+			'key' => $this->key,
+			'referenceTable' => $this->referenceTable,
+			'referenceTablePrimaryKey' => $this->referenceTablePrimaryKey,
+			'onDelete' => $this->onDelete,
+			'onUpdate' => $this->onUpdate
+		]);
+	}
+
+	public function unserialize($serialized): void
+	{
+		$data = json_decode($serialized);
+		$this->name = $data->name;
+		$this->key = $data->key;
+		$this->referenceTable = $data->referenceTable;
+		$this->referenceTablePrimaryKey = $data->referenceTablePrimaryKey;
+		$this->onDelete = $data->onDelete;
+		$this->onUpdate = $data->onUpdate;
 	}
 }

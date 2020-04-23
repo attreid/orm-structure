@@ -1,37 +1,34 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace NAttreid\Orm\Structure;
 
 use InvalidArgumentException;
 use Nette\SmartObject;
+use Serializable;
 
 /**
  * Class PrimaryKey
  *
  * @property-read string $name
- * @property-read Column $column
  *
  * @author Attreid <attreid@gmail.com>
  */
-class PrimaryKey
+class PrimaryKey implements Serializable
 {
 	use SmartObject;
 
 	/** @var string[] */
 	private $keys;
 
-	/** @var Table */
-	private $table;
 
-	public function __construct(Table $table, string...$key)
+	public function __construct(string...$key)
 	{
 		if (count($key) === 0) {
 			throw new InvalidArgumentException;
 		}
 
-		$this->table = $table;
 		$this->keys = $key;
 	}
 
@@ -52,16 +49,21 @@ class PrimaryKey
 		return $this->keys[0];
 	}
 
-	/**
-	 * @return Column
-	 */
-	protected function getColumn(): Column
-	{
-		return $this->table->columns[$this->name];
-	}
-
-	public function __toString()
+	public function getDefinition(): string
 	{
 		return 'PRIMARY KEY([' . implode('], [', $this->keys) . '])';
+	}
+
+	public function serialize(): string
+	{
+		return json_encode([
+			'keys' => $this->keys
+		]);
+	}
+
+	public function unserialize($serialized): void
+	{
+		$data = json_decode($serialized);
+		$this->keys = $data->keys;
 	}
 }

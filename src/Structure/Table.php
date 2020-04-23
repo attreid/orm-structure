@@ -19,10 +19,6 @@ use Serializable;
  * Tabulka
  *
  * @property-read string $name
- * @property-read Connection $connection
- * @property-read Column[] $columns
- * @property-read PrimaryKey $primaryKey
- * @property-read bool $useCamelCase
  * @property-read string $collate
  * @property-read bool $exists
  *
@@ -108,22 +104,6 @@ class Table implements Serializable
 	protected function getName(): string
 	{
 		return $this->name;
-	}
-
-	/**
-	 * @return Connection
-	 */
-	protected function getConnection(): Connection
-	{
-		return $this->connection;
-	}
-
-	/**
-	 * @return Column[]
-	 */
-	protected function getColumns(): array
-	{
-		return $this->columns;
 	}
 
 	/**
@@ -214,8 +194,8 @@ class Table implements Serializable
 	 * Zmena nazvu sloupce
 	 * @param string $name
 	 * @param Column $column
-	 * @internal
 	 * @return self
+	 * @internal
 	 */
 	public function addColumnToRename(string $name, Column $column): self
 	{
@@ -258,10 +238,16 @@ class Table implements Serializable
 	private function create(): void
 	{
 		$query = "CREATE TABLE IF NOT EXISTS %table (\n"
-			. implode(",\n", $this->columns) . ",\n"
+			. implode(",\n", array_map(function ($column) {
+				return $column->getDefinition();
+			}, $this->columns)) . ",\n"
 			. ($this->primaryKey !== null ? $this->primaryKey . (empty($this->keys) ? '' : ",\n") : '')
-			. implode(",\n", $this->keys) . (empty($this->constraints) ? '' : ",\n")
-			. implode(",\n", $this->constraints)
+			. implode(",\n", array_map(function ($key) {
+				return $key->getDefinition();
+			}, $this->keys)) . (empty($this->constraints) ? '' : ",\n")
+			. implode(",\n", array_map(function ($constrait) {
+				return $constrait->getDefinition();
+			}, $this->constraints))
 			. "\n) ENGINE=$this->engine" . (empty($this->autoIncrement) ? '' : " AUTO_INCREMENT=$this->autoIncrement") . " DEFAULT CHARSET=$this->charset COLLATE=$this->collate"
 			. (empty($this->addition) ? '' : "/*$this->addition*/");
 
@@ -295,7 +281,7 @@ class Table implements Serializable
 		$change = [];
 		foreach ($this->oldColumns as $name => $column) {
 			if ($this->columnExists($name)) {
-				$change[] = "[$name] $column";
+				$change[] = "[$name] {$column->getDefinition()}";
 			}
 		}
 		if (!empty($change)) {
@@ -318,7 +304,7 @@ class Table implements Serializable
 
 			if (isset($columns[$name])) {
 				if (!$columns[$name]->equals($column)) {
-					$modify[] = "$columns[$name]";
+					$modify[] = $columns[$name]->getDefinition();
 				}
 				unset($columns[$name]);
 			} else {
@@ -326,7 +312,9 @@ class Table implements Serializable
 			}
 		}
 		if (!empty($columns)) {
-			$add[] = '(' . implode(",\n", $columns) . ')';
+			$add[] = '(' . implode(",\n", array_map(function ($column) {
+					return $column->getDefinition();
+				}, $columns)) . ')';
 		}
 
 		// primarni klic
@@ -339,7 +327,7 @@ class Table implements Serializable
 				$dropKeys[] = 'PRIMARY KEY';
 			}
 			if (!empty($this->primaryKey)) {
-				$add[] = $this->primaryKey;
+				$add[] = $this->primaryKey->getDefinition();
 			}
 		}
 
@@ -357,7 +345,9 @@ class Table implements Serializable
 			$dropKeys[] = "INDEX [$name]";
 		}
 		if (!empty($keys)) {
-			$add = array_merge($add, $keys);
+			$add = array_merge($add, array_map(function ($key) {
+				return $key->getDefinition();
+			}, $keys));
 		}
 
 		// foreign key
@@ -373,7 +363,9 @@ class Table implements Serializable
 			$dropKeys[] = "FOREIGN KEY [$name]";
 		}
 		if (!empty($constraints)) {
-			$add = array_merge($add, $constraints);
+			$add = array_merge($add, array_map(function ($constrait) {
+				return $constrait->getDefinition();
+			}, $constraints));
 		}
 
 		// drop key
@@ -423,15 +415,6 @@ class Table implements Serializable
 	}
 
 	/**
-	 * Vrati primarni klic
-	 * @return PrimaryKey|null
-	 */
-	protected function getPrimaryKey(): ?PrimaryKey
-	{
-		return $this->primaryKey;
-	}
-
-	/**
 	 * Pridavek za dotaz (partition atd)
 	 * @param string $addition
 	 */
@@ -447,7 +430,9 @@ class Table implements Serializable
 	 */
 	public function addColumn(string $name): Column
 	{
-		return $this->columns[$name] = new Column($this, $name);
+		$this->columns[$name] = $column = new Column($name);
+		$column->setTable($this);
+		return $column;
 	}
 
 	/**
@@ -472,12 +457,23 @@ class Table implements Serializable
 	 */
 	public function addForeignKey(string $name, $mapperClass, $onDelete = true, $onUpdate = false): Column
 	{
-		$table = $this->getTableData($mapperClass);
+		$referenceTable = $this->getTableData($mapperClass);
 
-		$constrait = new Constrait($name, $this, $table, $onDelete, $onUpdate);
+		$column = $this->addColumn($name)
+			->setType($referenceTable->columns[$referenceTable->primaryKey->name]);
+
+		if ($onDelete === null) {
+			$column->setDefault(null);
+		} else {
+			$column->setDefault();
+		}
+
+		$this->addKey($name);
+
+		$constrait = new Constrait($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
 
 		$this->constraints[$constrait->name] = $constrait;
-		return $constrait->column;
+		return $column;
 	}
 
 	/**
@@ -504,7 +500,7 @@ class Table implements Serializable
 
 	/**
 	 * Nastavi hodnotu sloupce na unikatni
-	 * @param  string ...$key
+	 * @param string ...$key
 	 * @return self
 	 */
 	public function addUnique(string ...$name): self
@@ -534,7 +530,11 @@ class Table implements Serializable
 	 */
 	public function setPrimaryKey(string ...$key): self
 	{
-		$this->primaryKey = new PrimaryKey($this, ...$key);
+		$column = $this->columns[$key[0]] ?? null;
+		if ($column === null) {
+			throw new InvalidArgumentException("Column '$key[0]'is not defined.");
+		}
+		$this->primaryKey = new PrimaryKey(...$key);
 		return $this;
 	}
 
@@ -564,7 +564,7 @@ class Table implements Serializable
 			$mapper = $this->container->getByType($table);
 			return $mapper->getStructure();
 		} else {
-			throw new InvalidArgumentException;
+			throw new InvalidArgumentException("Table '$table' not exists");
 		}
 	}
 
@@ -682,7 +682,8 @@ class Table implements Serializable
 			'prefix' => $this->prefix,
 			'defaultDataFile' => $this->defaultDataFile
 		];
-		return serialize($unserialized);
+		$f= serialize($unserialized);
+		return$f;
 	}
 
 	public function unserialize($serialized): void

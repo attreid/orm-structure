@@ -6,13 +6,14 @@ namespace NAttreid\Orm\Structure;
 
 use Nextras\Dbal\Result\Row;
 use Nextras\Orm\InvalidStateException;
+use Serializable;
 
 /**
  * Sloupec
  *
  * @author Attreid <attreid@gmail.com>
  */
-class Column
+class Column implements Serializable
 {
 
 	/** @var string */
@@ -27,9 +28,13 @@ class Column
 	/** @var Table */
 	private $table;
 
-	public function __construct(Table $table, string $name)
+	public function __construct(string $name)
 	{
 		$this->name = $name;
+	}
+
+	public function setTable(Table $table): void
+	{
 		$this->table = $table;
 	}
 
@@ -454,7 +459,7 @@ class Column
 	 * @param string[] ...$names
 	 * @return self
 	 */
-	public function renameFrom(string... $names): self
+	public function renameFrom(string...$names): self
 	{
 		foreach ($names as $name) {
 			$this->table->addColumnToRename($name, $this);
@@ -462,11 +467,28 @@ class Column
 		return $this;
 	}
 
-	public function __toString()
+	public function getDefinition(): string
 	{
 		if ($this->type === null) {
 			throw new InvalidStateException('Type is not set');
 		}
 		return "[$this->name] $this->type $this->default";
+	}
+
+	public function serialize(): string
+	{
+		return json_encode([
+			'name' => $this->name,
+			'type' => $this->type,
+			'default' => $this->default
+		]);
+	}
+
+	public function unserialize($serialized): void
+	{
+		$data = json_decode($serialized);
+		$this->name = $data->name;
+		$this->type = $data->type;
+		$this->default = $data->default;
 	}
 }
