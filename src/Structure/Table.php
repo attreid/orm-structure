@@ -241,7 +241,7 @@ class Table implements Serializable
 			. implode(",\n", array_map(function ($column) {
 				return $column->getDefinition();
 			}, $this->columns)) . ",\n"
-			. ($this->primaryKey !== null ? $this->primaryKey . (empty($this->keys) ? '' : ",\n") : '')
+			. ($this->primaryKey !== null ? $this->primaryKey->getDefinition() . (empty($this->keys) ? '' : ",\n") : '')
 			. implode(",\n", array_map(function ($key) {
 				return $key->getDefinition();
 			}, $this->keys)) . (empty($this->constraints) ? '' : ",\n")
