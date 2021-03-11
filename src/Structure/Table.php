@@ -35,6 +35,9 @@ class Table implements Serializable
 	public $migration = [];
 
 	/** @var string */
+	public $manyHasManyStorageNamePattern = '%s_x_%s';
+
+	/** @var string */
 	private $database;
 
 	/** @var string */
@@ -183,9 +186,17 @@ class Table implements Serializable
 	 */
 	public function createRelationTable($tableName): self
 	{
-		$table = $this->getTableData($tableName);
+		try {
+			$relationName = $this->getTableData($tableName)->name;
+		} catch (InvalidArgumentException $ex) {
+			$relationName = $tableName;
+		}
 
-		$name = $this->name . '_x_' . $table->name;
+		$name = sprintf(
+			$this->manyHasManyStorageNamePattern,
+			$this->name,
+			preg_replace('#^(.*\.)?(.*)$#', '$2', $relationName)
+		);
 
 		return $this->relationTables[] = $this->tableFactory->create($name, $this->prefix);
 	}
@@ -411,7 +422,7 @@ class Table implements Serializable
 	public function escapeString(string $value): string
 	{
 		$this->connection->reconnect();
-		return $this->connection->getDriver()->convertStringToSql((string) $value);
+		return $this->connection->getDriver()->convertStringToSql((string)$value);
 	}
 
 	/**
@@ -682,8 +693,8 @@ class Table implements Serializable
 			'prefix' => $this->prefix,
 			'defaultDataFile' => $this->defaultDataFile
 		];
-		$f= serialize($unserialized);
-		return$f;
+		$f = serialize($unserialized);
+		return $f;
 	}
 
 	public function unserialize($serialized): void
