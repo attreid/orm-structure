@@ -65,6 +65,17 @@ class Constrait implements Serializable
 	}
 
 	/**
+	 * Nastavi jmeno identifikatoru
+	 * @param string $name
+	 * @return $this
+	 */
+	public function setIdentifier(string $name): self
+	{
+		$this->name = $name;
+		return $this;
+	}
+
+	/**
 	 * Vrati hodnotu pro zmenu
 	 * @param mixed $value
 	 * @return string

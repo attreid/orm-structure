@@ -464,9 +464,10 @@ class Table implements Serializable
 	 * @param string|Table $mapperClass klic uz musi byt v tabulce nastaven
 	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET null
 	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET null
+	 * @param string|null $identifier volitelne jmeno identifikatoru
 	 * @return Column
 	 */
-	public function addForeignKey(string $name, $mapperClass, $onDelete = true, $onUpdate = false): Column
+	public function addForeignKey(string $name, $mapperClass, $onDelete = true, $onUpdate = false, string $identifier = null): Column
 	{
 		$referenceTable = $this->getTableData($mapperClass);
 
@@ -482,6 +483,9 @@ class Table implements Serializable
 		$this->addKey($name);
 
 		$constrait = new Constrait($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
+		if ($identifier !== null) {
+			$constrait->setIdentifier($identifier);
+		}
 
 		$this->constraints[$constrait->name] = $constrait;
 		return $column;
