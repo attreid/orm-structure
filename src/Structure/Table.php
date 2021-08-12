@@ -56,10 +56,10 @@ class Table implements Serializable
 	private $engine = 'InnoDB';
 
 	/** @var string */
-	private $charset = 'utf8';
+	private $charset = 'utf8mb4';
 
 	/** @var string */
-	private $collate = 'utf8_czech_ci';
+	private $collate = 'utf8mb4_general_ci';
 
 	/** @var Column[] */
 	private $columns = [];
