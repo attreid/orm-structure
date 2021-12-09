@@ -9,6 +9,7 @@ use NAttreid\Utils\Arrays;
 use NAttreid\Utils\Strings;
 use Nette\Caching\Cache;
 use Nette\DI\MissingServiceException;
+use Nextras\Dbal\Bridges\NetteCaching\CachedPlatform;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\DriverException;
 use Nextras\Dbal\IConnection;
@@ -16,6 +17,12 @@ use Nextras\Dbal\QueryBuilder\QueryBuilder;
 use Nextras\Dbal\QueryException;
 use Nextras\Dbal\Result\Result;
 use Nextras\Orm\Entity\IEntity;
+use Nextras\Orm\Entity\Reflection\EntityMetadata;
+use Nextras\Orm\Exception\InvalidStateException;
+use Nextras\Orm\Mapper\Dbal\Conventions\Conventions;
+use Nextras\Orm\Mapper\Dbal\Conventions\IConventions;
+use Nextras\Orm\Mapper\Dbal\Conventions\Inflector\CamelCaseInflector;
+use Nextras\Orm\Mapper\Dbal\Conventions\Inflector\IInflector;
 use Nextras\Orm\Mapper\Dbal\DbalMapperCoordinator;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\StorageReflection;
@@ -31,11 +38,14 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @var Table */
 	private $table;
 
-	/** @var callback[] */
+	/** @var array<callable(): void> */
 	public $onCreateTable = [];
 
 	/** @var MapperManager */
 	private $manager;
+
+	/** @var bool */
+	private $isCached = false;
 
 	public function __construct(IConnection $connection, DbalMapperCoordinator $mapperCoordinator, Cache $cache, MapperManager $manager)
 	{
@@ -125,13 +135,66 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 				if ($this->manager->autoManageDb) {
 					$isNew = $table->check();
 					if ($isNew) {
-						$this->onCreateTable();
+						Arrays::invoke($this->onCreateTable);
 					}
 				}
 				return $table;
 			});
+		} else {
+			$this->isCached = true;
 		}
 		return $result;
+	}
+
+	public function getConventions(): IConventions
+	{
+		if ($this->isCached) {
+			return parent::getConventions();
+		} else {
+			return $this->createCleanConventions();
+		}
+	}
+
+	private function createCleanConventions(): Conventions
+	{
+		return new class (
+			$this->createInflector(),
+			$this->connection,
+			$this->getTableName(),
+			$this->getRepository()->getEntityMetadata(),
+			$this->cache
+		) extends Conventions {
+			public function __construct(IInflector $inflector, IConnection $connection, string $storageName, EntityMetadata $entityMetadata, Cache $cache)
+			{
+				$this->inflector = $inflector;
+				$this->platform = $connection->getPlatform();
+				$this->entityMetadata = $entityMetadata;
+				$this->storageName = $storageName;
+				$this->storageNameWithSchema = strpos($storageName, '.') !== false;
+				$this->storageTable = $this->findStorageTable($this->storageName);
+
+				$this->mappings = $this->getDefaultMappings();
+				$this->modifiers = $this->getDefaultModifiers();
+			}
+
+			private function findStorageTable(string $tableName): \Nextras\Dbal\Platforms\Data\Table
+			{
+				if ($this->storageNameWithSchema) {
+					[$schema, $tableName] = explode('.', $tableName);
+				} else {
+					$schema = null;
+				}
+
+				$tables = $this->platform->getTables($schema);
+				foreach ($tables as $table) {
+					if ($table->name === $tableName) {
+						return $table;
+					}
+				}
+
+				throw new InvalidStateException("Cannot find '$tableName' table reflection.");
+			}
+		};
 	}
 
 	/**
@@ -140,15 +203,9 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	 */
 	abstract protected function createTable(Table $table): void;
 
-	/** @inheritdoc */
-	protected function createStorageReflection(): StorageReflection
+	protected function createInflector(): IInflector
 	{
-		return new CamelCaseStorageReflection(
-			$this->connection,
-			$this->getTableName(),
-			$this->getRepository()->getEntityMetadata()->getPrimaryKey(),
-			$this->cache
-		);
+		return new CamelCaseInflector();
 	}
 
 	/**

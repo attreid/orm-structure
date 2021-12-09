@@ -41,8 +41,9 @@ class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 				'autoManageDb' => $config['autoManageDb']
 			]);
 
-		$this->builder->addDefinition($this->prefix('tableFactory'))
+		$this->builder->addFactoryDefinition($this->prefix('tableFactory'))
 			->setImplement(ITableFactory::class)
+			->getResultDefinition()
 			->setFactory(Table::class);
 
 		$repositories = $this->repositoryFinder->loadConfiguration();
