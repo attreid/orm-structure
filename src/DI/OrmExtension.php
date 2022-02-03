@@ -7,38 +7,35 @@ namespace NAttreid\Orm\DI;
 use NAttreid\Orm\MapperManager;
 use NAttreid\Orm\Structure\ITableFactory;
 use NAttreid\Orm\Structure\Table;
+use Nette\Schema\Expect;
+use Nette\Schema\Schema;
 use Nextras\Orm\Model\Model;
 
-/**
- * Rozsireni orm
- *
- * @author Attreid <attreid@gmail.com>
- */
 class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 {
-
-	private $defaults = [
-		'model' => Model::class,
-
-		'add' => [],
-		'useCamelCase' => true,
-		'autoManageDb' => true
-	];
+	public function getConfigSchema(): Schema
+	{
+		return Expect::structure([
+			'model' => Expect::string(Model::class),
+			'add' => Expect::arrayOf('string')->default([]),
+			'useCamelCase' => Expect::bool(true),
+			'autoManageDb' => Expect::bool(true)
+		]);
+	}
 
 	public function loadConfiguration(): void
 	{
 		$this->builder = $this->getContainerBuilder();
 
-		$config = $this->validateConfig($this->defaults, $this->getConfig());
-		$this->modelClass = $config['model'];
+		$this->modelClass = $this->config->model;
 
-		$this->repositoryFinder = new PhpDocRepositoryFinder($this->modelClass, $this->builder, $this, $config['add']);
+		$this->repositoryFinder = new PhpDocRepositoryFinder($this->modelClass, $this->builder, $this, $this->config->add);
 
 		$this->builder->addDefinition($this->prefix('mapperManager'))
 			->setType(MapperManager::class)
 			->setArguments([
-				'useCamelCase' => $config['useCamelCase'],
-				'autoManageDb' => $config['autoManageDb']
+				'useCamelCase' => $this->config->useCamelCase,
+				'autoManageDb' => $this->config->autoManageDb
 			]);
 
 		$this->builder->addFactoryDefinition($this->prefix('tableFactory'))

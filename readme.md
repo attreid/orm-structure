@@ -1,6 +1,6 @@
-# Rozšíření Nextras/ORM
+# Extension Nextras/ORM
 
-Nastavení **config.neon**
+Settings **config.neon**
 ```neon
 extensions:
     dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
@@ -17,7 +17,7 @@ dbal:
 orm:
     model: App\Model\Orm
     useCamelCase: true
-    autoManageDb: true # automaticka kontrola tabulek a vytvareni neexistujicich
+    autoManageDb: true # check table and create new
     add:
         - Another\Orm
 ```
@@ -71,7 +71,7 @@ class ExampleMapper extends \NAttreid\Orm\Mapper {
         $relationTable->addForeignKey('otherId', OtherMapper::class);
         $relationTable->setPrimaryKey('exampleId', 'otherId');
 
-        // migrace 
+        // migration 
         if (!$relationTable->exists) {
             $table->migration[] = function (Row $row, Connection $connection) use ($relationTable) {
                 if (isset($row->oldColumnId)) {
@@ -112,4 +112,4 @@ class Example extends \Nextras\Orm\Entity\Entity {
 
 }
 ```
-Dokumentace na adrese https://nextras.org/orm
+Documentation on https://nextras.org/orm

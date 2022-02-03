@@ -7,15 +7,10 @@ namespace NAttreid\Orm\DI;
 use Nette\DI\ContainerBuilder;
 use Nextras\Orm\Bridges\NetteDI\OrmExtension;
 
-/**
- * Class PhpDocRepositoryFinder
- *
- * @author Attreid <attreid@gmail.com>
- */
 class PhpDocRepositoryFinder extends \Nextras\Orm\Bridges\NetteDI\PhpDocRepositoryFinder
 {
 	/** @var string[] */
-	private $addModelClasses;
+	private array $addModelClasses;
 
 	public function __construct(string $modelClass, ContainerBuilder $containerBuilder, OrmExtension $extension, array $addModelClasses = [])
 	{

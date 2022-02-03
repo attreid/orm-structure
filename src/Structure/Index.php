@@ -9,11 +9,7 @@ use Nette\SmartObject;
 use Serializable;
 
 /**
- * Class Index
- *
  * @property-read string $name
- *
- * @author Attreid <attreid@gmail.com>
  */
 class Index implements Serializable
 {
@@ -23,14 +19,11 @@ class Index implements Serializable
 		UNIQUE = 'UNIQUE',
 		FULLTEXT = 'FULLTEXT';
 
-	/** @var string */
-	private $name;
+	private string $name;
+	private ?string $prefix = null;
 
 	/** @var string[] */
-	private $keys;
-
-	/** @var string */
-	private $prefix;
+	private array $keys;
 
 	public function __construct(string...$key)
 	{
@@ -42,38 +35,23 @@ class Index implements Serializable
 		$this->keys = $key;
 	}
 
-	/**
-	 * @return string
-	 */
 	protected function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * Nastavi hodnotu sloupce na unikatni
-	 * @return self
-	 */
 	public function setUnique(): self
 	{
 		$this->prefix = self::UNIQUE;
 		return $this;
 	}
 
-	/**
-	 * Nastavi typ na fulltext
-	 * @return self
-	 */
 	public function setFulltext(): self
 	{
 		$this->prefix = self::FULLTEXT;
 		return $this;
 	}
 
-	/**
-	 * @param Key $row
-	 * @return bool
-	 */
 	public function equals(Key $row): bool
 	{
 		$prefix = null;
@@ -91,12 +69,6 @@ class Index implements Serializable
 		return $key == $this->getDefinition();
 	}
 
-	/**
-	 * @param string $name
-	 * @param array $keys
-	 * @param string $prefix
-	 * @return string
-	 */
 	private function prepare(string $name, array $keys, string $prefix = null): string
 	{
 		$key = '[' . implode('], [', $keys) . ']';

@@ -27,25 +27,14 @@ use Nextras\Orm\Mapper\Dbal\DbalMapperCoordinator;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
 use Nextras\Orm\Mapper\Dbal\StorageReflection\StorageReflection;
 
-/**
- * Mapper
- *
- * @author Attreid <attreid@gmail.com>
- */
 abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 {
-
-	/** @var Table */
-	private $table;
-
 	/** @var array<callable(): void> */
-	public $onCreateTable = [];
+	public array $onCreateTable = [];
 
-	/** @var MapperManager */
-	private $manager;
-
-	/** @var bool */
-	private $isCached = false;
+	private Table $table;
+	private MapperManager $manager;
+	private bool $isCached = false;
 
 	public function __construct(IConnection $connection, DbalMapperCoordinator $mapperCoordinator, Cache $cache, MapperManager $manager)
 	{
@@ -68,51 +57,38 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return $this->getTablePrefix() . $this->tableName;
 	}
 
-	/**
-	 * @return Table
-	 */
 	public function getStructure(): Table
 	{
 		return $this->table;
 	}
 
 	/**
-	 * Vrati vysledek dotazu
-	 * @param QueryBuilder $builder
-	 * @return Result|null
-	 * @throws QueryException
+	 * @param callable $onCreateTable
+	 * @return Mapper
 	 */
+	public function setOnCreateTable(callable $onCreateTable): Mapper
+	{
+		$this->onCreateTable = $onCreateTable;
+		return $this;
+	}
+
+	/** @throws QueryException */
 	protected function execute(QueryBuilder $builder): ?Result
 	{
 		return $this->connection->queryArgs($builder->getQuerySql(), $builder->getQueryParameters());
 	}
 
-	/**
-	 * Upravi retezec pro pouziti v MATCH AGAINST
-	 * @param string $text
-	 * @return string
-	 */
 	protected function prepareFulltext(string $text): string
 	{
 		$text = Strings::replace($text, '/\(|\)|@|\*|-|\+|<|>/', '');
 		return "*$text*";
 	}
 
-	/**
-	 * Vrati predponu nazvu tabulky
-	 * @return string
-	 */
 	public function getTablePrefix(): string
 	{
 		return '';
 	}
 
-	/**
-	 * Vrati radek podle hash sloupce
-	 * @param string|array $columns
-	 * @param string $hash
-	 * @return IEntity|null
-	 */
 	public function getByHash($columns, string $hash): ?IEntity
 	{
 		if ($this->manager->hasher === null) {
@@ -121,9 +97,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return $this->toEntity($this->manager->hasher->hashSQL($this->builder(), $columns, $hash));
 	}
 
-	/**
-	 * @return Table
-	 */
 	private function checkTable(): Table
 	{
 		$key = $this->getTableName() . 'Structure';
@@ -197,10 +170,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		};
 	}
 
-	/**
-	 * Nastavi strukturu tabulky
-	 * @param Table $table
-	 */
 	abstract protected function createTable(Table $table): void;
 
 	protected function createInflector(): IInflector
@@ -208,11 +177,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return new CamelCaseInflector();
 	}
 
-	/**
-	 * INSERT
-	 * @param array $data
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	protected function insert(array $data): void
 	{
 		if (Arrays::isMultidimensional($data)) {
@@ -223,15 +188,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 	}
 
-	/**
-	 * Zmeni razeni
-	 * @param string $column
-	 * @param mixed $id
-	 * @param mixed $prevId
-	 * @param mixed $nextId
-	 * @throws QueryException
-	 * @throws DriverException
-	 */
+	/** @throws QueryException */
 	public function changeSort(string $column, $id, $prevId, $nextId): void
 	{
 		$repo = $this->getRepository();
@@ -263,32 +220,19 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$repo->persistAndFlush($entity);
 	}
 
-	/**
-	 * Vrati nejvetsi pozici
-	 * @param string $column
-	 * @return int
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	public function getMax(string $column): int
 	{
 		return $this->connection->query('SELECT IFNULL(MAX(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
 	}
 
-	/**
-	 * Vrati nejmensi pozici
-	 * @param string $column
-	 * @return int
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	public function getMin(string $column): int
 	{
 		return $this->connection->query('SELECT IFNULL(MIN(%column), 0) position FROM %table', $column, $this->getTableName())->fetch()->position;
 	}
 
-	/**
-	 * Smaze data v tabulce
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	public function truncate(): void
 	{
 		$this->connection->query('TRUNCATE TABLE %table', $this->getTableName());

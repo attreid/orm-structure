@@ -16,13 +16,9 @@ use Nextras\Dbal\Utils\FileImporter;
 use Serializable;
 
 /**
- * Tabulka
- *
  * @property-read string $name
  * @property-read string $collate
  * @property-read bool $exists
- *
- * @author Attreid <attreid@gmail.com>
  */
 class Table implements Serializable
 {
@@ -32,64 +28,37 @@ class Table implements Serializable
 	 * Add migration function function (\Nextras\Dbal\Result\Row, \Nextras\Dbal\Connection)
 	 * @var callable[]
 	 */
-	public $migration = [];
-
-	/** @var string */
-	public $manyHasManyStorageNamePattern = '%s_x_%s';
-
-	/** @var string */
-	private $database;
-
-	/** @var string */
-	private $name;
-
-	/** @var Connection */
-	private $connection;
-
-	/** @var Container */
-	private $container;
-
-	/** @var ITableFactory */
-	private $tableFactory;
-
-	/** @var string */
-	private $engine = 'InnoDB';
-
-	/** @var string */
-	private $charset = 'utf8';
-
-	/** @var string */
-	private $collate = 'utf8_czech_ci';
+	public array $migration = [];
 
 	/** @var Column[] */
-	private $columns = [];
+	private array $columns = [];
 
 	/** @var Column[] */
-	private $oldColumns = [];
-
-	/** @var PrimaryKey */
-	private $primaryKey;
+	private array $oldColumns = [];
 
 	/** @var Index[] */
-	private $keys = [];
+	private array $keys = [];
 
 	/** @var Constrait[] */
-	private $constraints = [];
-
-	/** @var int */
-	private $autoIncrement = null;
-
-	/** @var string */
-	private $addition = null;
+	private array $constraints = [];
 
 	/** @var Table[] */
-	private $relationTables = [];
+	private array $relationTables = [];
 
-	/** @var string */
-	private $prefix;
-
-	/** @var string */
-	private $defaultDataFile;
+	public string $manyHasManyStorageNamePattern = '%s_x_%s';
+	private string $database;
+	private string $name;
+	private Connection $connection;
+	private Container $container;
+	private ITableFactory $tableFactory;
+	private string $engine = 'InnoDB';
+	private string $charset = 'utf8';
+	private string $collate = 'utf8_czech_ci';
+	private PrimaryKey $primaryKey;
+	private ?int $autoIncrement = null;
+	private ?string $addition = null;
+	private string $prefix;
+	private ?string $defaultDataFile = null;
 
 	public function __construct(string $name, string $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
 	{
@@ -101,89 +70,52 @@ class Table implements Serializable
 		$this->tableFactory = $tableFactory;
 	}
 
-	/**
-	 * @return string
-	 */
 	protected function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * @return string
-	 */
 	protected function getCollate(): string
 	{
 		return $this->collate;
 	}
 
-	/**
-	 * @return bool
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	protected function isExists(): bool
 	{
 		return $this->exists($this->name);
 	}
 
-	/**
-	 * @param string $table
-	 * @return bool
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	public function exists(string $table): bool
 	{
 		$result = $this->connection->query("SHOW TABLES LIKE %s", $table)->fetch();
 		return $result ? true : false;
 	}
 
-	/**
-	 * Nastavi engine (default=InnoDB)
-	 * @param string $engine
-	 * @return self
-	 */
 	public function setEngine(string $engine): self
 	{
 		$this->engine = $engine;
 		return $this;
 	}
 
-	/**
-	 * Nastavi charset (default=utf8)
-	 * @param string $charset
-	 * @return self
-	 */
 	public function setCharset(string $charset): self
 	{
 		$this->charset = $charset;
 		return $this;
 	}
 
-	/**
-	 * Nastavi engine (default=utf8_czech_ci)
-	 * @param string $collate
-	 * @return self
-	 */
 	public function setCollate(string $collate): self
 	{
 		$this->collate = $collate;
 		return $this;
 	}
 
-	/**
-	 * Nastavi soubor pro nahrani dat pri vytvareni tabulky
-	 * @param string $file
-	 */
 	public function setDefaultDataFile(string $file)
 	{
 		$this->defaultDataFile = $file;
 	}
 
-	/**
-	 * Vytvori spojovou tabulku
-	 * @param string|Table $tableName
-	 * @return self
-	 */
 	public function createRelationTable($tableName): self
 	{
 		try {
@@ -201,24 +133,14 @@ class Table implements Serializable
 		return $this->relationTables[] = $this->tableFactory->create($name, $this->prefix);
 	}
 
-	/**
-	 * Zmena nazvu sloupce
-	 * @param string $name
-	 * @param Column $column
-	 * @return self
-	 * @internal
-	 */
+	/** @internal */
 	public function addColumnToRename(string $name, Column $column): self
 	{
 		$this->oldColumns[$name] = $column;
 		return $this;
 	}
 
-	/**
-	 * Proveri zda tabulka existuje a podle toho ji bud vytvori nebo upravi (pokud je treba)
-	 * @return bool pokud je vytvorena vrati true
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	public function check(): bool
 	{
 		$isNew = false;
@@ -242,10 +164,7 @@ class Table implements Serializable
 		return $isNew;
 	}
 
-	/**
-	 * Vytvori tabulku
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function create(): void
 	{
 		$query = "CREATE TABLE IF NOT EXISTS %table (\n"
@@ -265,10 +184,7 @@ class Table implements Serializable
 		$this->connection->query($query, $this->name);
 	}
 
-	/**
-	 * Upravi tabulku
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function modifyTable(): void
 	{
 		$table = $this->getTableSchema();
@@ -283,10 +199,7 @@ class Table implements Serializable
 		}
 	}
 
-	/**
-	 * Zmeni nazvy sloupcu tabulky
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function changeColumns(): void
 	{
 		$change = [];
@@ -300,15 +213,12 @@ class Table implements Serializable
 		}
 	}
 
-	/**
-	 * Upravi klice a sloupce tabulky
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function modifyColumnsAndKeys(): void
 	{
 		$dropKeys = $dropColumns = $modify = $add = $primKey = [];
 
-		// sloupce
+		// columns
 		$columns = $this->columns;
 		foreach ($this->connection->query('SHOW FULL COLUMNS FROM %table', $this->name) as $column) {
 			$name = $column->Field;
@@ -328,7 +238,7 @@ class Table implements Serializable
 				}, $columns)) . ')';
 		}
 
-		// primarni klic
+		// primary keys
 		foreach ($this->connection->query('SHOW INDEX FROM %table WHERE Key_name = %s', $this->name, 'PRIMARY') as $index) {
 			$primKey[] = $index->Column_name;
 		}
@@ -342,7 +252,7 @@ class Table implements Serializable
 			}
 		}
 
-		// klice
+		// keys
 		$keys = $this->keys;
 		foreach ($this->getKeys() as $key) {
 			$name = $key->name;
@@ -415,30 +325,17 @@ class Table implements Serializable
 		}
 	}
 
-	/**
-	 * @param string $value
-	 * @return string
-	 */
 	public function escapeString(string $value): string
 	{
 		$this->connection->reconnect();
 		return $this->connection->getDriver()->convertStringToSql((string)$value);
 	}
 
-	/**
-	 * Pridavek za dotaz (partition atd)
-	 * @param string $addition
-	 */
 	public function add(string $addition): void
 	{
 		$this->addition = $addition;
 	}
 
-	/**
-	 * Prida sloupec
-	 * @param string $name
-	 * @return Column
-	 */
 	public function addColumn(string $name): Column
 	{
 		$this->columns[$name] = $column = new Column($name);
@@ -446,11 +343,6 @@ class Table implements Serializable
 		return $column;
 	}
 
-	/**
-	 * Prida primarni klic
-	 * @param string $name
-	 * @return Column
-	 */
 	public function addPrimaryKey(string $name): Column
 	{
 		$column = $this->addColumn($name);
@@ -459,14 +351,11 @@ class Table implements Serializable
 	}
 
 	/**
-	 * Nastavi cizi klic
-	 * @param string $name
-	 * @param string|Table $mapperClass klic uz musi byt v tabulce nastaven
-	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET null
-	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET null
-	 * @return Column
+	 * @param string|Table $mapperClass
+	 * @param ?bool $onDelete false => RESTRICT, true => CASCADE, null => SET null
+	 * @param ?bool $onUpdate false => RESTRICT, true => CASCADE, null => SET null
 	 */
-	public function addForeignKey(string $name, $mapperClass, $onDelete = true, $onUpdate = false): Column
+	public function addForeignKey(string $name, $mapperClass, ?bool $onDelete = true, ?bool $onUpdate = false): Column
 	{
 		$referenceTable = $this->getTableData($mapperClass);
 
@@ -487,20 +376,11 @@ class Table implements Serializable
 		return $column;
 	}
 
-	/**
-	 * Odebere sloupec
-	 * @param string $name
-	 */
 	public function removeColumn(string $name): void
 	{
 		unset($this->columns[$name]);
 	}
 
-	/**
-	 * Nastavi fulltext
-	 * @param string ...$key
-	 * @return self
-	 */
 	public function addFulltext(string ...$name): self
 	{
 		$key = new Index(...$name);
@@ -509,11 +389,6 @@ class Table implements Serializable
 		return $this;
 	}
 
-	/**
-	 * Nastavi hodnotu sloupce na unikatni
-	 * @param string ...$key
-	 * @return self
-	 */
 	public function addUnique(string ...$name): self
 	{
 		$key = new Index(...$name);
@@ -522,11 +397,6 @@ class Table implements Serializable
 		return $this;
 	}
 
-	/**
-	 * Nastavi klic
-	 * @param string[] ...$name
-	 * @return self
-	 */
 	public function addKey(string ...$name): self
 	{
 		$key = new Index(...$name);
@@ -534,11 +404,6 @@ class Table implements Serializable
 		return $this;
 	}
 
-	/**
-	 * Nastavi primarni klic
-	 * @param string[] ...$key
-	 * @return self
-	 */
 	public function setPrimaryKey(string ...$key): self
 	{
 		$column = $this->columns[$key[0]] ?? null;
@@ -549,11 +414,6 @@ class Table implements Serializable
 		return $this;
 	}
 
-	/**
-	 * Nastavi auto increment
-	 * @param int $first
-	 * @return self
-	 */
 	public function setAutoIncrement(int $first): self
 	{
 		$this->autoIncrement = $first;
@@ -561,9 +421,7 @@ class Table implements Serializable
 	}
 
 	/**
-	 * Vrati nazev tabulky a jeji klic
 	 * @param string|Table $table
-	 * @return self
 	 * @throws InvalidArgumentException
 	 */
 	private function getTableData($table): self
@@ -579,11 +437,7 @@ class Table implements Serializable
 		}
 	}
 
-	/**
-	 * Vrati schema tabulky
-	 * @return Row|null
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function getTableSchema(): ?Row
 	{
 		return $this->connection->query("
@@ -599,11 +453,7 @@ class Table implements Serializable
 			$this->name)->fetch();
 	}
 
-	/**
-	 * Vrati schema cizich klicu
-	 * @return Result|null
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function getConstraits(): ?Result
 	{
 		return $this->connection->query("
@@ -622,11 +472,7 @@ class Table implements Serializable
 			$this->name);
 	}
 
-	/**
-	 * Vrati schema klicu
-	 * @return Key[]
-	 * @throws QueryException
-	 */
+	/** @throws QueryException */
 	private function getKeys(): array
 	{
 		/* @var $result Key[] */
@@ -693,8 +539,7 @@ class Table implements Serializable
 			'prefix' => $this->prefix,
 			'defaultDataFile' => $this->defaultDataFile
 		];
-		$f = serialize($unserialized);
-		return $f;
+		return serialize($unserialized);
 	}
 
 	public function unserialize($serialized): void

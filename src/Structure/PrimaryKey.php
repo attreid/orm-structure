@@ -9,19 +9,14 @@ use Nette\SmartObject;
 use Serializable;
 
 /**
- * Class PrimaryKey
- *
  * @property-read string $name
- *
- * @author Attreid <attreid@gmail.com>
  */
 class PrimaryKey implements Serializable
 {
 	use SmartObject;
 
 	/** @var string[] */
-	private $keys;
-
+	private array $keys;
 
 	public function __construct(string...$key)
 	{
@@ -32,18 +27,11 @@ class PrimaryKey implements Serializable
 		$this->keys = $key;
 	}
 
-	/**
-	 * @param array $keys
-	 * @return bool
-	 */
 	public function equals(array $keys): bool
 	{
 		return $this->keys === $keys;
 	}
 
-	/**
-	 * @return string
-	 */
 	protected function getName(): string
 	{
 		return $this->keys[0];

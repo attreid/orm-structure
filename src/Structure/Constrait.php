@@ -9,40 +9,20 @@ use Nextras\Dbal\Result\Row;
 use Serializable;
 
 /**
- * Class Constrait
- *
  * @property-read string $name
- *
- * @author Attreid <attreid@gmail.com>
  */
 class Constrait implements Serializable
 {
 	use SmartObject;
 
-	/** @var string */
-	private $name;
-
-	/** @var string */
-	private $key;
-
-	/** @var string */
-	private $referenceTable;
-
-	/** @var string */
-	private $referenceTablePrimaryKey;
-
-	/** @var bool|mixed */
-	private $onDelete;
-
-	/** @var bool|mixed */
-	private $onUpdate;
+	private string $name;
+	private string $key;
+	private string $referenceTable;
+	private string $referenceTablePrimaryKey;
+	private ?bool $onDelete;
+	private ?bool $onUpdate;
 
 	/**
-	 * Constrait constructor.
-	 * @param string $key
-	 * @param string $tableName
-	 * @param string $referenceTable
-	 * @param string $referenceTablePrimaryKey
 	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET NULL
 	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET NULL
 	 */
@@ -56,19 +36,11 @@ class Constrait implements Serializable
 		$this->onUpdate = $onUpdate;
 	}
 
-	/**
-	 * @return string
-	 */
 	protected function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * Vrati hodnotu pro zmenu
-	 * @param mixed $value
-	 * @return string
-	 */
 	private function prepareOnChange($value): string
 	{
 		if ($value === false) {
@@ -80,11 +52,6 @@ class Constrait implements Serializable
 		}
 	}
 
-	/**
-	 * Vrati hodnotu pro zmenu
-	 * @param string $value
-	 * @return string
-	 */
 	private function parseOnChange(string $value): string
 	{
 		switch ($value) {
@@ -101,10 +68,6 @@ class Constrait implements Serializable
 		}
 	}
 
-	/**
-	 * @param Row $row
-	 * @return bool
-	 */
 	public function equals(Row $row): bool
 	{
 		$constrait = $this->prepare(
@@ -118,15 +81,6 @@ class Constrait implements Serializable
 		return $constrait == $this->getDefinition();
 	}
 
-	/**
-	 * @param string $name
-	 * @param string $key
-	 * @param string $referenceTable
-	 * @param string $referenceKey
-	 * @param string $onDelete
-	 * @param string $onUpdate
-	 * @return string
-	 */
 	private function prepare(string $name, string $key, string $referenceTable, string $referenceKey, string $onDelete, string $onUpdate): string
 	{
 		return "CONSTRAINT [$name] FOREIGN KEY ([$key]) REFERENCES [$referenceTable] ([$referenceKey]) ON DELETE {$this->parseOnChange($onDelete)} ON UPDATE {$this->parseOnChange($onUpdate)}";
