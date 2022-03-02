@@ -11,7 +11,7 @@ use Serializable;
 /**
  * @property-read string $name
  */
-class Index implements Serializable
+final class Index implements Serializable
 {
 	use SmartObject;
 

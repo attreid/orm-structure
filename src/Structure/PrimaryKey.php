@@ -11,7 +11,7 @@ use Serializable;
 /**
  * @property-read string $name
  */
-class PrimaryKey implements Serializable
+final class PrimaryKey implements Serializable
 {
 	use SmartObject;
 

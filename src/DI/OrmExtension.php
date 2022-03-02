@@ -11,7 +11,7 @@ use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use Nextras\Orm\Model\Model;
 
-class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
+final class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 {
 	public function getConfigSchema(): Schema
 	{

@@ -20,7 +20,7 @@ use Serializable;
  * @property-read string $collate
  * @property-read bool $exists
  */
-class Table implements Serializable
+final class Table implements Serializable
 {
 	use SmartObject;
 
@@ -39,7 +39,7 @@ class Table implements Serializable
 	/** @var Index[] */
 	private array $keys = [];
 
-	/** @var Constrait[] */
+	/** @var Constraint[] */
 	private array $constraints = [];
 
 	/** @var Table[] */
@@ -175,8 +175,8 @@ class Table implements Serializable
 			. implode(",\n", array_map(function ($key) {
 				return $key->getDefinition();
 			}, $this->keys)) . (empty($this->constraints) ? '' : ",\n")
-			. implode(",\n", array_map(function ($constrait) {
-				return $constrait->getDefinition();
+			. implode(",\n", array_map(function ($constraint) {
+				return $constraint->getDefinition();
 			}, $this->constraints))
 			. "\n) ENGINE=$this->engine" . (empty($this->autoIncrement) ? '' : " AUTO_INCREMENT=$this->autoIncrement") . " DEFAULT CHARSET=$this->charset COLLATE=$this->collate"
 			. (empty($this->addition) ? '' : "/*$this->addition*/");
@@ -273,10 +273,10 @@ class Table implements Serializable
 
 		// foreign key
 		$constraints = $this->constraints;
-		foreach ($this->getConstraits() as $constrait) {
-			$name = $constrait->CONSTRAINT_NAME;
+		foreach ($this->getConstraints() as $constraint) {
+			$name = $constraint->CONSTRAINT_NAME;
 			if (isset($constraints[$name])) {
-				if ($constraints[$name]->equals($constrait)) {
+				if ($constraints[$name]->equals($constraint)) {
 					unset($constraints[$name]);
 					continue;
 				}
@@ -284,8 +284,8 @@ class Table implements Serializable
 			$dropKeys[] = "FOREIGN KEY [$name]";
 		}
 		if (!empty($constraints)) {
-			$add = array_merge($add, array_map(function ($constrait) {
-				return $constrait->getDefinition();
+			$add = array_merge($add, array_map(function ($constraint) {
+				return $constraint->getDefinition();
 			}, $constraints));
 		}
 
@@ -370,9 +370,9 @@ class Table implements Serializable
 
 		$this->addKey($name);
 
-		$constrait = new Constrait($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
+		$constraint = new Constraint($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
 
-		$this->constraints[$constrait->name] = $constrait;
+		$this->constraints[$constraint->name] = $constraint;
 		return $column;
 	}
 
@@ -454,7 +454,7 @@ class Table implements Serializable
 	}
 
 	/** @throws QueryException */
-	private function getConstraits(): ?Result
+	private function getConstraints(): ?Result
 	{
 		return $this->connection->query("
 			SELECT 

@@ -14,7 +14,7 @@ use Nette\SmartObject;
  * @property-read ITableFactory $tableFactory
  * @property-read Hasher $hasher
  */
-class MapperManager
+final class MapperManager
 {
 	use SmartObject;
 

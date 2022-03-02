@@ -11,7 +11,7 @@ use Serializable;
 /**
  * @property-read string $name
  */
-class Constrait implements Serializable
+final class Constraint implements Serializable
 {
 	use SmartObject;
 
@@ -70,7 +70,7 @@ class Constrait implements Serializable
 
 	public function equals(Row $row): bool
 	{
-		$constrait = $this->prepare(
+		$constraint = $this->prepare(
 			$row->CONSTRAINT_NAME,
 			$row->COLUMN_NAME,
 			$row->REFERENCED_TABLE_NAME,
@@ -78,7 +78,7 @@ class Constrait implements Serializable
 			$row->DELETE_RULE,
 			$row->UPDATE_RULE
 		);
-		return $constrait == $this->getDefinition();
+		return $constraint == $this->getDefinition();
 	}
 
 	private function prepare(string $name, string $key, string $referenceTable, string $referenceKey, string $onDelete, string $onUpdate): string

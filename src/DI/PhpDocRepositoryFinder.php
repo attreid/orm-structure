@@ -7,7 +7,7 @@ namespace NAttreid\Orm\DI;
 use Nette\DI\ContainerBuilder;
 use Nextras\Orm\Bridges\NetteDI\OrmExtension;
 
-class PhpDocRepositoryFinder extends \Nextras\Orm\Bridges\NetteDI\PhpDocRepositoryFinder
+final class PhpDocRepositoryFinder extends \Nextras\Orm\Bridges\NetteDI\PhpDocRepositoryFinder
 {
 	/** @var string[] */
 	private array $addModelClasses;

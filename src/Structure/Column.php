@@ -8,7 +8,7 @@ use Nextras\Dbal\Result\Row;
 use Nextras\Orm\Exception\InvalidStateException;
 use Serializable;
 
-class Column implements Serializable
+final class Column implements Serializable
 {
 	private string $name;
 	private string $type;

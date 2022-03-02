@@ -13,7 +13,7 @@ use Serializable;
  * @property string $type
  * @property bool $unique
  */
-class Key implements Serializable
+final class Key implements Serializable
 {
 	use SmartObject;
 
