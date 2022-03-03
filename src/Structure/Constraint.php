@@ -28,7 +28,7 @@ final class Constraint implements Serializable
 	 */
 	public function __construct(string $key, string $tableName, string $referenceTable, string $referenceTablePrimaryKey, $onDelete = true, $onUpdate = false)
 	{
-		$this->name = 'fk_' . $tableName . '_' . $key . '_' . $referenceTable . '_' . $referenceTablePrimaryKey;
+		$this->name = 'fk_' . substr($tableName, 0, 3) . substr($tableName, -3) . '_' . $key . '_' . substr($referenceTable, 0, 3) . substr($referenceTable, -3) . '_' . $referenceTablePrimaryKey;
 		$this->key = $key;
 		$this->referenceTable = $referenceTable;
 		$this->referenceTablePrimaryKey = $referenceTablePrimaryKey;
