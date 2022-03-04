@@ -28,7 +28,7 @@ final class Constraint implements Serializable
 	 */
 	public function __construct(string $key, string $tableName, string $referenceTable, string $referenceTablePrimaryKey, $onDelete = true, $onUpdate = false)
 	{
-		$this->name = 'fk_' . substr($tableName, 0, 3) . substr($tableName, -3) . '_' . $key . '_' . substr($referenceTable, 0, 3) . substr($referenceTable, -3) . '_' . $referenceTablePrimaryKey;
+		$this->name = 'fk_' . $this->prepareTableName($tableName) . '_' . $key . '_' . $this->prepareTableName($referenceTable) . '_' . $referenceTablePrimaryKey;
 		$this->key = $key;
 		$this->referenceTable = $referenceTable;
 		$this->referenceTablePrimaryKey = $referenceTablePrimaryKey;
@@ -79,6 +79,16 @@ final class Constraint implements Serializable
 			$row->UPDATE_RULE
 		);
 		return $constraint == $this->getDefinition();
+	}
+
+	private function prepareTableName(string $table): string
+	{
+		$result = '';
+		$arr = preg_split('/(?=[A-Z|_])/', $table, -1, PREG_SPLIT_NO_EMPTY);
+		foreach ($arr as $item) {
+			$result .= substr(str_replace('_', '', $item), 0, 2);
+		}
+		return $result;
 	}
 
 	private function prepare(string $name, string $key, string $referenceTable, string $referenceKey, string $onDelete, string $onUpdate): string
