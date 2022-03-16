@@ -42,19 +42,16 @@ final class OrmExtension extends \Nextras\Orm\Bridges\NetteDI\OrmExtension
 			->setImplement(ITableFactory::class)
 			->getResultDefinition()
 			->setFactory(Table::class);
-
-		$repositories = $this->repositoryFinder->loadConfiguration();
-
+		
 		$this->setupCache();
 		$this->setupDependencyProvider();
 		$this->setupDbalMapperDependencies();
 		$this->setupMetadataParserFactory();
 
-		if ($repositories !== null) {
-			$repositoriesConfig = Model::getConfiguration($repositories);
-			$this->setupMetadataStorage($repositoriesConfig[2]);
-			$this->setupModel($this->modelClass, $repositoriesConfig);
-		}
+		$repositories = $this->repositoryFinder->loadConfiguration();
+		$repositoriesConfig = Model::getConfiguration($repositories);
+		$this->setupMetadataStorage($repositoriesConfig[2]);
+		$this->setupModel($this->modelClass, $repositoriesConfig);
 	}
 
 }

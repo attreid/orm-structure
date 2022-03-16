@@ -5,18 +5,14 @@ declare(strict_types=1);
 namespace NAttreid\Orm;
 
 use NAttreid\Orm\Structure\Table;
-use NAttreid\Utils\Arrays;
-use NAttreid\Utils\Strings;
 use Nette\Caching\Cache;
-use Nette\DI\MissingServiceException;
-use Nextras\Dbal\Bridges\NetteCaching\CachedPlatform;
+use Nette\Utils\Arrays;
+use Nette\Utils\Strings;
 use Nextras\Dbal\Connection;
-use Nextras\Dbal\DriverException;
+use Nextras\Dbal\Drivers\Exception\QueryException;
 use Nextras\Dbal\IConnection;
 use Nextras\Dbal\QueryBuilder\QueryBuilder;
-use Nextras\Dbal\QueryException;
 use Nextras\Dbal\Result\Result;
-use Nextras\Orm\Entity\IEntity;
 use Nextras\Orm\Entity\Reflection\EntityMetadata;
 use Nextras\Orm\Exception\InvalidStateException;
 use Nextras\Orm\Mapper\Dbal\Conventions\Conventions;
@@ -24,12 +20,10 @@ use Nextras\Orm\Mapper\Dbal\Conventions\IConventions;
 use Nextras\Orm\Mapper\Dbal\Conventions\Inflector\CamelCaseInflector;
 use Nextras\Orm\Mapper\Dbal\Conventions\Inflector\IInflector;
 use Nextras\Orm\Mapper\Dbal\DbalMapperCoordinator;
-use Nextras\Orm\Mapper\Dbal\StorageReflection\CamelCaseStorageReflection;
-use Nextras\Orm\Mapper\Dbal\StorageReflection\StorageReflection;
 
 abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 {
-	/** @var array<callable(): void> */
+	/** @var array */
 	public array $onCreateTable = [];
 
 	private Table $table;
@@ -62,16 +56,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return $this->table;
 	}
 
-	/**
-	 * @param callable $onCreateTable
-	 * @return Mapper
-	 */
-	public function setOnCreateTable(callable $onCreateTable): Mapper
-	{
-		$this->onCreateTable = $onCreateTable;
-		return $this;
-	}
-
 	/** @throws QueryException */
 	protected function execute(QueryBuilder $builder): ?Result
 	{
@@ -87,14 +71,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	public function getTablePrefix(): string
 	{
 		return '';
-	}
-
-	public function getByHash($columns, string $hash): ?IEntity
-	{
-		if ($this->manager->hasher === null) {
-			throw new MissingServiceException('Hasher is missing');
-		}
-		return $this->toEntity($this->manager->hasher->hashSQL($this->builder(), $columns, $hash));
 	}
 
 	private function checkTable(): Table
@@ -180,7 +156,8 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 	/** @throws QueryException */
 	protected function insert(array $data): void
 	{
-		if (Arrays::isMultidimensional($data)) {
+
+		if (is_array(reset($data))) {
 			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values[]', $data);
 		} else {
 			$this->connection->query('INSERT INTO ' . $this->getTableName() . ' %values', $data);

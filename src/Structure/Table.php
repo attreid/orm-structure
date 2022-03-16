@@ -9,7 +9,7 @@ use NAttreid\Orm\Mapper;
 use Nette\DI\Container;
 use Nette\SmartObject;
 use Nextras\Dbal\Connection;
-use Nextras\Dbal\QueryException;
+use Nextras\Dbal\Drivers\Exception\QueryException;
 use Nextras\Dbal\Result\Result;
 use Nextras\Dbal\Result\Row;
 use Nextras\Dbal\Utils\FileImporter;

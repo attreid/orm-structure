@@ -14,8 +14,7 @@
     "php": ">= 7.4",
     "ext-json": "*",
     "nette/di": "~3.0",
-    "nextras/orm": "~4.0",
-    "nattreid/utils": "~2.0"
+    "nextras/orm": "~4.0"
   },
   "require-dev": {
     "nette/tester": "~2.4",
