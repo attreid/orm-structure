@@ -355,7 +355,7 @@ final class Table implements Serializable
 	 * @param ?bool $onDelete false => RESTRICT, true => CASCADE, null => SET null
 	 * @param ?bool $onUpdate false => RESTRICT, true => CASCADE, null => SET null
 	 */
-	public function addForeignKey(string $name, $mapperClass, ?bool $onDelete = true, ?bool $onUpdate = false): Column
+	public function addForeignKey(string $name, $mapperClass, ?bool $onDelete = true, ?bool$onUpdate = false, string $identifier = null): Column
 	{
 		$referenceTable = $this->getTableData($mapperClass);
 
@@ -370,7 +370,10 @@ final class Table implements Serializable
 
 		$this->addKey($name);
 
-		$constraint = new Constraint($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
+		$constraint = new Constrait($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
+		if ($identifier !== null) {
+			$constraint->setIdentifier($identifier);
+		}
 
 		$this->constraints[$constraint->name] = $constraint;
 		return $column;

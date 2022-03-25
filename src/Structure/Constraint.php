@@ -41,6 +41,17 @@ final class Constraint implements Serializable
 		return $this->name;
 	}
 
+	public function setIdentifier(string $name): self
+	{
+		$this->name = $name;
+		return $this;
+	}
+
+	/**
+	 * Vrati hodnotu pro zmenu
+	 * @param mixed $value
+	 * @return string
+	 */
 	private function prepareOnChange($value): string
 	{
 		if ($value === false) {
