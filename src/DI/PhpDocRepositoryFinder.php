@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm\DI;
+namespace Attreid\OrmStructure\DI;
 
 use JetBrains\PhpStorm\Pure;
 use Nette\DI\ContainerBuilder;

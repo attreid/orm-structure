@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm;
+namespace Attreid\OrmStructure;
 
-use Attreid\Orm\Structure\Table;
+use Attreid\OrmStructure\Structure\Table;
 use JetBrains\PhpStorm\Pure;
 use Nette\Caching\Cache;
 use Nette\Utils\Arrays;

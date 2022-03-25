@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm\Structure;
+namespace Attreid\OrmStructure\Structure;
 
 use Nextras\Dbal\Result\Row;
 use Nextras\Orm\Exception\InvalidStateException;

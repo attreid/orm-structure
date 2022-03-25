@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm\DI;
+namespace Attreid\OrmStructure\DI;
 
-use Attreid\Orm\MapperManager;
-use Attreid\Orm\Structure\ITableFactory;
-use Attreid\Orm\Structure\Table;
+use Attreid\OrmStructure\MapperManager;
+use Attreid\OrmStructure\Structure\ITableFactory;
+use Attreid\OrmStructure\Structure\Table;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use Nextras\Orm\Model\Model;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm\Structure;
+namespace Attreid\OrmStructure\Structure;
 
 use InvalidArgumentException;
-use Attreid\Orm\Mapper;
+use Attreid\OrmStructure\Mapper;
 use JetBrains\PhpStorm\Pure;
 use Nette\DI\Container;
 use Nette\SmartObject;

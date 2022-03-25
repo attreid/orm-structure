@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm;
+namespace Attreid\OrmStructure;
 
-use Attreid\Orm\Structure\ITableFactory;
+use Attreid\OrmStructure\Structure\ITableFactory;
 use Nette\SmartObject;
 
 /**

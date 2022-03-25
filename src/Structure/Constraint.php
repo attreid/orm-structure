@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm\Structure;
+namespace Attreid\OrmStructure\Structure;
 
 use Nette\SmartObject;
 use Nextras\Dbal\Result\Row;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Attreid\Orm\Structure;
+namespace Attreid\OrmStructure\Structure;
 
 use InvalidArgumentException;
 use JetBrains\PhpStorm\Pure;
