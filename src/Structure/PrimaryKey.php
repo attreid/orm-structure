@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\Structure;
+namespace Attreid\Orm\Structure;
 
 use InvalidArgumentException;
 use Nette\SmartObject;
-use Serializable;
 
 /**
  * @property-read string $name
  */
-final class PrimaryKey implements Serializable
+final class PrimaryKey
 {
 	use SmartObject;
 
@@ -42,16 +41,15 @@ final class PrimaryKey implements Serializable
 		return 'PRIMARY KEY([' . implode('], [', $this->keys) . '])';
 	}
 
-	public function serialize(): string
+	public function __serialize(): array
 	{
-		return json_encode([
+		return [
 			'keys' => $this->keys
-		]);
+		];
 	}
 
-	public function unserialize($serialized): void
+	public function __unserialize(array $data): void
 	{
-		$data = json_decode($serialized);
-		$this->keys = $data->keys;
+		$this->keys = $data['keys'];
 	}
 }

@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\Structure;
+namespace Attreid\Orm\Structure;
 
 use Nette\SmartObject;
 use Nextras\Dbal\Result\Row;
-use Serializable;
 
 /**
  * @property-read string $name
  */
-final class Constraint implements Serializable
+final class Constraint
 {
 	use SmartObject;
 
@@ -26,7 +25,7 @@ final class Constraint implements Serializable
 	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET NULL
 	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET NULL
 	 */
-	public function __construct(string $key, string $tableName, string $referenceTable, string $referenceTablePrimaryKey, $onDelete = true, $onUpdate = false)
+	public function __construct(string $key, string $tableName, string $referenceTable, string $referenceTablePrimaryKey, ?bool $onDelete = true, ?bool $onUpdate = false)
 	{
 		$this->name = 'fk_' . $this->prepareTableName($tableName) . '_' . $key . '_' . $this->prepareTableName($referenceTable) . '_' . $referenceTablePrimaryKey;
 		$this->key = $key;
@@ -47,12 +46,7 @@ final class Constraint implements Serializable
 		return $this;
 	}
 
-	/**
-	 * Vrati hodnotu pro zmenu
-	 * @param mixed $value
-	 * @return string
-	 */
-	private function prepareOnChange($value): string
+	private function prepareOnChange(?bool $value): string
 	{
 		if ($value === false) {
 			return 'RESTRICT';
@@ -65,18 +59,12 @@ final class Constraint implements Serializable
 
 	private function parseOnChange(string $value): string
 	{
-		switch ($value) {
-			default:
-			case 'NO ACTION':
-			case 'RESTRICT':
-				return 'RESTRICT';
-
-			case 'SET NULL':
-				return 'SET NULL';
-
-			case 'CASCADE':
-				return 'CASCADE';
-		}
+		return match ($value) {
+			default => 'RESTRICT',
+			'NO ACTION', 'RESTRICT' => 'RESTRICT',
+			'SET NULL' => 'SET NULL',
+			'CASCADE' => 'CASCADE'
+		};
 	}
 
 	public function equals(Row $row): bool
@@ -119,26 +107,25 @@ final class Constraint implements Serializable
 		);
 	}
 
-	public function serialize(): string
+	public function __serialize(): array
 	{
-		return json_encode([
+		return [
 			'name' => $this->name,
 			'key' => $this->key,
 			'referenceTable' => $this->referenceTable,
 			'referenceTablePrimaryKey' => $this->referenceTablePrimaryKey,
 			'onDelete' => $this->onDelete,
 			'onUpdate' => $this->onUpdate
-		]);
+		];
 	}
 
-	public function unserialize($serialized): void
+	public function __unserialize(array $data): void
 	{
-		$data = json_decode($serialized);
-		$this->name = $data->name;
-		$this->key = $data->key;
-		$this->referenceTable = $data->referenceTable;
-		$this->referenceTablePrimaryKey = $data->referenceTablePrimaryKey;
-		$this->onDelete = $data->onDelete;
-		$this->onUpdate = $data->onUpdate;
+		$this->name = $data['name'];
+		$this->key = $data['key'];
+		$this->referenceTable = $data['referenceTable'];
+		$this->referenceTablePrimaryKey = $data['referenceTablePrimaryKey'];
+		$this->onDelete = $data['onDelete'];
+		$this->onUpdate = $data['onUpdate'];
 	}
 }

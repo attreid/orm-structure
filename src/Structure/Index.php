@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\Structure;
+namespace Attreid\Orm\Structure;
 
 use InvalidArgumentException;
+use JetBrains\PhpStorm\Pure;
 use Nette\SmartObject;
-use Serializable;
 
 /**
  * @property-read string $name
  */
-final class Index implements Serializable
+final class Index
 {
 	use SmartObject;
 
-	const
+	private const
 		UNIQUE = 'UNIQUE',
 		FULLTEXT = 'FULLTEXT';
 
@@ -75,7 +75,7 @@ final class Index implements Serializable
 		return ($prefix !== null ? $prefix . ' ' : '') . "KEY [$name] ($key)";
 	}
 
-	public function getDefinition(): string
+	#[Pure] public function getDefinition(): string
 	{
 		return $this->prepare(
 			$this->name,
@@ -84,20 +84,19 @@ final class Index implements Serializable
 		);
 	}
 
-	public function serialize(): string
+	public function __serialize(): array
 	{
-		return json_encode([
+		return [
 			'name' => $this->name,
 			'keys' => $this->keys,
 			'prefix' => $this->prefix
-		]);
+		];
 	}
 
-	public function unserialize($serialized): void
+	public function __unserialize(array $data): void
 	{
-		$data = json_decode($serialized);
-		$this->name = $data->name;
-		$this->keys = $data->keys;
-		$this->prefix = $data->prefix;
+		$this->name = $data['name'];
+		$this->keys = $data['keys'];
+		$this->prefix = $data['prefix'];
 	}
 }

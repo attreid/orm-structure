@@ -106,7 +106,7 @@ class ExampleMapper extends \NAttreid\Orm\Mapper {
  * @property Example|NULL $parent {m:1 Example::$children}
  * @property OneHasMany|Example[] $children {1:m Example::$parent, orderBy=id}
  * @property string $pa
- * @property boolean $allowed {default TRUE}
+ * @property boolean $allowed {default true}
  */
 class Example extends \Nextras\Orm\Entity\Entity {
 

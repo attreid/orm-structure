@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\Structure;
+namespace Attreid\Orm\Structure;
 
 use Nette\SmartObject;
-use Serializable;
 
 /**
  * @property string $name
@@ -13,12 +12,11 @@ use Serializable;
  * @property string $type
  * @property bool $unique
  */
-final class Key implements Serializable
+final class Key
 {
 	use SmartObject;
 
 	private string $name;
-
 	/** @var string[] */
 	private array $columns;
 	private string $type;
@@ -65,22 +63,21 @@ final class Key implements Serializable
 		$this->unique = $unique;
 	}
 
-	public function serialize(): string
+	public function __serialize(): array
 	{
-		return json_encode([
+		return [
 			'name' => $this->name,
 			'columns' => $this->columns,
 			'type' => $this->type,
 			'unique' => $this->unique
-		]);
+		];
 	}
 
-	public function unserialize($serialized): void
+	public function __unserialize(array $data): void
 	{
-		$data = json_decode($serialized);
-		$this->name = $data->name;
-		$this->columns = $data->columns;
-		$this->type = $data->type;
-		$this->unique = $data->unique;
+		$this->name = $data['name'];
+		$this->columns = $data['columns'];
+		$this->type = $data['type'];
+		$this->unique = $data['unique'];
 	}
 }

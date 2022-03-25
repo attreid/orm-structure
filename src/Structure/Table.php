@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\Structure;
+namespace Attreid\Orm\Structure;
 
 use InvalidArgumentException;
-use NAttreid\Orm\Mapper;
+use Attreid\Orm\Mapper;
+use JetBrains\PhpStorm\Pure;
 use Nette\DI\Container;
 use Nette\SmartObject;
 use Nextras\Dbal\Connection;
@@ -13,14 +14,13 @@ use Nextras\Dbal\Drivers\Exception\QueryException;
 use Nextras\Dbal\Result\Result;
 use Nextras\Dbal\Result\Row;
 use Nextras\Dbal\Utils\FileImporter;
-use Serializable;
 
 /**
  * @property-read string $name
  * @property-read string $collate
  * @property-read bool $exists
  */
-final class Table implements Serializable
+final class Table
 {
 	use SmartObject;
 
@@ -34,7 +34,7 @@ final class Table implements Serializable
 	private array $columns = [];
 
 	/** @var Column[] */
-	private array $oldColumns = [];
+	private array $columnsToRename = [];
 
 	/** @var Index[] */
 	private array $keys = [];
@@ -60,7 +60,7 @@ final class Table implements Serializable
 	private string $prefix;
 	private ?string $defaultDataFile = null;
 
-	public function __construct(string $name, string $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
+	#[Pure] public function __construct(string $name, string $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
 	{
 		$this->database = $connection->getConfig()['database'];
 		$this->name = $name;
@@ -90,7 +90,7 @@ final class Table implements Serializable
 	public function exists(string $table): bool
 	{
 		$result = $this->connection->query("SHOW TABLES LIKE %s", $table)->fetch();
-		return $result ? true : false;
+		return (bool)$result;
 	}
 
 	public function setEngine(string $engine): self
@@ -136,7 +136,7 @@ final class Table implements Serializable
 	/** @internal */
 	public function addColumnToRename(string $name, Column $column): self
 	{
-		$this->oldColumns[$name] = $column;
+		$this->columnsToRename[$name] = $column;
 		return $this;
 	}
 
@@ -203,7 +203,7 @@ final class Table implements Serializable
 	private function changeColumns(): void
 	{
 		$change = [];
-		foreach ($this->oldColumns as $name => $column) {
+		foreach ($this->columnsToRename as $name => $column) {
 			if ($this->columnExists($name)) {
 				$change[] = "[$name] {$column->getDefinition()}";
 			}
@@ -355,7 +355,7 @@ final class Table implements Serializable
 	 * @param ?bool $onDelete false => RESTRICT, true => CASCADE, null => SET null
 	 * @param ?bool $onUpdate false => RESTRICT, true => CASCADE, null => SET null
 	 */
-	public function addForeignKey(string $name, $mapperClass, ?bool $onDelete = true, ?bool$onUpdate = false, string $identifier = null): Column
+	public function addForeignKey(string $name, $mapperClass, ?bool $onDelete = true, ?bool $onUpdate = false, string $identifier = null): Column
 	{
 		$referenceTable = $this->getTableData($mapperClass);
 
@@ -423,11 +423,7 @@ final class Table implements Serializable
 		return $this;
 	}
 
-	/**
-	 * @param string|Table $table
-	 * @throws InvalidArgumentException
-	 */
-	private function getTableData($table): self
+	private function getTableData(string|Table $table): self
 	{
 		if ($table instanceof Table) {
 			return $table;
@@ -522,12 +518,12 @@ final class Table implements Serializable
 			$this->database,
 			$this->name,
 			$name)->fetch();
-		return $row->num > 0 ? true : false;
+		return $row->num > 0;
 	}
 
-	public function serialize(): string
+	public function __serialize(): array
 	{
-		$unserialized = [
+		return [
 			'name' => $this->name,
 			'engine' => $this->engine,
 			'charset' => $this->charset,
@@ -542,26 +538,23 @@ final class Table implements Serializable
 			'prefix' => $this->prefix,
 			'defaultDataFile' => $this->defaultDataFile
 		];
-		return serialize($unserialized);
 	}
 
-	public function unserialize($serialized): void
+	public function __unserialize(array $data): void
 	{
-		$unserialized = unserialize($serialized);
-
-		$this->name = $unserialized['name'];
-		$this->engine = $unserialized['engine'];
-		$this->charset = $unserialized['charset'];
-		$this->collate = $unserialized['collate'];
-		$this->columns = unserialize($unserialized['columns']);
-		$this->primaryKey = unserialize($unserialized['primaryKey']);
-		$this->keys = unserialize($unserialized['keys']);
-		$this->constraints = unserialize($unserialized['constraints']);
-		$this->autoIncrement = $unserialized['autoIncrement'];
-		$this->addition = $unserialized['addition'];
-		$this->relationTables = unserialize($unserialized['relationTables']);
-		$this->prefix = $unserialized['prefix'];
-		$this->defaultDataFile = $unserialized['defaultDataFile'];
+		$this->name = $data['name'];
+		$this->engine = $data['engine'];
+		$this->charset = $data['charset'];
+		$this->collate = $data['collate'];
+		$this->columns = unserialize($data['columns']);
+		$this->primaryKey = unserialize($data['primaryKey']);
+		$this->keys = unserialize($data['keys']);
+		$this->constraints = unserialize($data['constraints']);
+		$this->autoIncrement = $data['autoIncrement'];
+		$this->addition = $data['addition'];
+		$this->relationTables = unserialize($data['relationTables']);
+		$this->prefix = $data['prefix'];
+		$this->defaultDataFile = $data['defaultDataFile'];
 	}
 }
 

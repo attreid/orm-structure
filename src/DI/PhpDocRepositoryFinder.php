@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\DI;
+namespace Attreid\Orm\DI;
 
+use JetBrains\PhpStorm\Pure;
 use Nette\DI\ContainerBuilder;
 use Nextras\Orm\Bridges\NetteDI\OrmExtension;
 
@@ -12,7 +13,7 @@ final class PhpDocRepositoryFinder extends \Nextras\Orm\Bridges\NetteDI\PhpDocRe
 	/** @var string[] */
 	private array $addModelClasses;
 
-	public function __construct(string $modelClass, ContainerBuilder $containerBuilder, OrmExtension $extension, array $addModelClasses = [])
+	#[Pure] public function __construct(string $modelClass, ContainerBuilder $containerBuilder, OrmExtension $extension, array $addModelClasses = [])
 	{
 		parent::__construct($modelClass, $containerBuilder, $extension);
 		$this->addModelClasses = $addModelClasses;

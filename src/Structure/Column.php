@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm\Structure;
+namespace Attreid\Orm\Structure;
 
 use Nextras\Dbal\Result\Row;
 use Nextras\Orm\Exception\InvalidStateException;
-use Serializable;
 
-final class Column implements Serializable
+final class Column
 {
 	private string $name;
 	private string $type;
@@ -225,9 +224,9 @@ final class Column implements Serializable
 	}
 
 	/**
-	 * @param mixed $default false => NOT null (default), null => DEFAULT null, ostatni DEFAULT dana hodnota
+	 * @param mixed $default false => NOT null (default), null => DEFAULT null, other DEFAULT value
 	 */
-	public function setDefault($default = false, bool $empty = false): self
+	public function setDefault(mixed $default = false, bool $empty = false): self
 	{
 		if ($this->type == 'timestamp') {
 			return $this;
@@ -289,26 +288,22 @@ final class Column implements Serializable
 
 	public function getDefinition(): string
 	{
-		if ($this->type === null) {
-			throw new InvalidStateException('Type is not set');
-		}
 		return "[$this->name] $this->type $this->default";
 	}
 
-	public function serialize(): string
+	public function __serialize(): array
 	{
-		return json_encode([
+		return [
 			'name' => $this->name,
 			'type' => $this->type,
 			'default' => $this->default
-		]);
+		];
 	}
 
-	public function unserialize($serialized): void
+	public function __unserialize(array $data): void
 	{
-		$data = json_decode($serialized);
-		$this->name = $data->name;
-		$this->type = $data->type;
-		$this->default = $data->default;
+		$this->name = $data['name'];
+		$this->type = $data['type'];
+		$this->default = $data['default'];
 	}
 }

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm;
+namespace Attreid\Orm;
 
-use NAttreid\Orm\Structure\Table;
+use Attreid\Orm\Structure\Table;
+use JetBrains\PhpStorm\Pure;
 use Nette\Caching\Cache;
 use Nette\Utils\Arrays;
 use Nette\Utils\Strings;
@@ -23,7 +24,6 @@ use Nextras\Orm\Mapper\Dbal\DbalMapperCoordinator;
 
 abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 {
-	/** @var array */
 	public array $onCreateTable = [];
 
 	private Table $table;
@@ -37,7 +37,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		$this->table = $this->checkTable();
 	}
 
-	/** @inheritdoc */
 	public function getTableName(): string
 	{
 		if ($this->manager->useCamelCase) {
@@ -119,7 +118,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 				$this->platform = $connection->getPlatform();
 				$this->entityMetadata = $entityMetadata;
 				$this->storageName = $storageName;
-				$this->storageNameWithSchema = strpos($storageName, '.') !== false;
+				$this->storageNameWithSchema = str_contains($storageName, '.');
 				$this->storageTable = $this->findStorageTable($this->storageName);
 
 				$this->mappings = $this->getDefaultMappings();
@@ -148,7 +147,7 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 
 	abstract protected function createTable(Table $table): void;
 
-	protected function createInflector(): IInflector
+	#[Pure] protected function createInflector(): IInflector
 	{
 		return new CamelCaseInflector();
 	}

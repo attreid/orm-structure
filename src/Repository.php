@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NAttreid\Orm;
+namespace Attreid\Orm;
 
 use Nextras\Orm\Mapper\IMapper;
 use Nextras\Orm\Repository\IDependencyProvider;
