@@ -370,7 +370,7 @@ final class Table
 
 		$this->addKey($name);
 
-		$constraint = new Constrait($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
+		$constraint = new Constraint($name, $this->name, $referenceTable->name, $referenceTable->primaryKey->name, $onDelete, $onUpdate);
 		if ($identifier !== null) {
 			$constraint->setIdentifier($identifier);
 		}
