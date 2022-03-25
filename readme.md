@@ -4,7 +4,7 @@ Settings **config.neon**
 ```neon
 extensions:
     dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
-    orm: NAttreid\Orm\DI\OrmExtension
+    orm: Attreid\Orm\DI\OrmExtension
 
 dbal:
     dbal:
@@ -36,7 +36,7 @@ class Orm extends \Nextras\Orm\Model\Model {
 
 ## Repository
 ```php
-class ExampleRepository extends \NAttreid\Orm\Repository {
+class ExampleRepository extends \Attreid\Orm\Repository {
 
     public static function getEntityClassNames() {
         return [Example::class];
@@ -46,9 +46,9 @@ class ExampleRepository extends \NAttreid\Orm\Repository {
 
 ## Mapper
 ```php
-class ExampleMapper extends \NAttreid\Orm\Mapper {
+class ExampleMapper extends \Attreid\Orm\Mapper {
 
-    protected function createTable(\NAttreid\Orm\Structure\Table $table) {
+    protected function createTable(\Attreid\Orm\Structure\Table $table) {
         $table->setDefaultDataFile(__DIR__.'/import.sql');
         
         $table->addPrimaryKey('id')
