@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Attreid\OrmStructure\Structure;
 
+use Attreid\OrmStructure\Interfaces\TableFactory;
+use Attreid\OrmStructure\Structure;
 use InvalidArgumentException;
 use Attreid\OrmStructure\Mapper;
-use JetBrains\PhpStorm\Pure;
 use Nette\DI\Container;
 use Nette\SmartObject;
 use Nextras\Dbal\Connection;
@@ -25,7 +26,7 @@ final class Table
 	use SmartObject;
 
 	/**
-	 * Add migration function function (\Nextras\Dbal\Result\Row, \Nextras\Dbal\Connection)
+	 * Add migration function (\Nextras\Dbal\Result\Row, \Nextras\Dbal\Connection)
 	 * @var callable[]
 	 */
 	public array $migration = [];
@@ -50,24 +51,23 @@ final class Table
 	private string $name;
 	private Connection $connection;
 	private Container $container;
-	private ITableFactory $tableFactory;
+	private Structure $structure;
 	private string $engine = 'InnoDB';
 	private string $charset = 'utf8';
 	private string $collate = 'utf8_czech_ci';
 	private PrimaryKey $primaryKey;
 	private ?int $autoIncrement = null;
 	private ?string $addition = null;
-	private string $prefix;
 	private ?string $defaultDataFile = null;
+	private ?array $addOnCreate = null;
 
-	#[Pure] public function __construct(string $name, string $prefix, Connection $connection, Container $container, ITableFactory $tableFactory)
+	public function __construct(string $name, Connection $connection, Container $container, Structure $structure)
 	{
 		$this->database = $connection->getConfig()['database'];
 		$this->name = $name;
-		$this->prefix = $prefix;
 		$this->connection = $connection;
 		$this->container = $container;
-		$this->tableFactory = $tableFactory;
+		$this->structure = $structure;
 	}
 
 	protected function getName(): string
@@ -111,12 +111,13 @@ final class Table
 		return $this;
 	}
 
-	public function setDefaultDataFile(string $file)
+	public function setDefaultDataFile(string $file): self
 	{
 		$this->defaultDataFile = $file;
+		return $this;
 	}
 
-	public function createRelationTable($tableName): self
+	public function createRelationTable(string|Table $tableName): self
 	{
 		try {
 			$relationName = $this->getTableData($tableName)->name;
@@ -130,7 +131,7 @@ final class Table
 			preg_replace('#^(.*\.)?(.*)$#', '$2', $relationName)
 		);
 
-		return $this->relationTables[] = $this->tableFactory->create($name, $this->prefix);
+		return $this->relationTables[] = $this->structure->createTable($name);
 	}
 
 	/** @internal */
@@ -141,16 +142,12 @@ final class Table
 	}
 
 	/** @throws QueryException */
-	public function check(): bool
+	public function check(): void
 	{
-		$isNew = false;
 		$this->connection->query('SET foreign_key_checks = 0');
 		if (!$this->exists) {
 			$this->create();
-			$isNew = true;
-			if ($this->defaultDataFile !== null) {
-				FileImporter::executeFile($this->connection, $this->defaultDataFile);
-			}
+			$this->importData();
 
 			foreach ($this->relationTables as $table) {
 				$table->check();
@@ -161,7 +158,6 @@ final class Table
 			$this->modifyTable();
 		}
 		$this->connection->query('SET foreign_key_checks = 1');
-		return $isNew;
 	}
 
 	/** @throws QueryException */
@@ -328,7 +324,7 @@ final class Table
 	public function escapeString(string $value): string
 	{
 		$this->connection->reconnect();
-		return $this->connection->getDriver()->convertStringToSql((string)$value);
+		return $this->connection->getDriver()->convertStringToSql($value);
 	}
 
 	public function add(string $addition): void
@@ -351,11 +347,10 @@ final class Table
 	}
 
 	/**
-	 * @param string|Table $mapperClass
 	 * @param ?bool $onDelete false => RESTRICT, true => CASCADE, null => SET null
 	 * @param ?bool $onUpdate false => RESTRICT, true => CASCADE, null => SET null
 	 */
-	public function addForeignKey(string $name, $mapperClass, ?bool $onDelete = true, ?bool $onUpdate = false, string $identifier = null): Column
+	public function addForeignKey(string $name, string|Table $mapperClass, ?bool $onDelete = true, ?bool $onUpdate = false, string $identifier = null): Column
 	{
 		$referenceTable = $this->getTableData($mapperClass);
 
@@ -423,14 +418,17 @@ final class Table
 		return $this;
 	}
 
+	public function addOnCreate(array $data): void
+	{
+		$this->addOnCreate = $data;
+	}
+
 	private function getTableData(string|Table $table): self
 	{
 		if ($table instanceof Table) {
 			return $table;
 		} elseif (is_subclass_of($table, Mapper::class)) {
-			/* @var $mapper Mapper */
-			$mapper = $this->container->getByType($table);
-			return $mapper->getStructure();
+			return $this->structure->getTable($table);
 		} else {
 			throw new InvalidArgumentException("Table '$table' not exists");
 		}
@@ -535,7 +533,6 @@ final class Table
 			'autoIncrement' => $this->autoIncrement,
 			'addition' => $this->addition,
 			'relationTables' => serialize($this->relationTables),
-			'prefix' => $this->prefix,
 			'defaultDataFile' => $this->defaultDataFile
 		];
 	}
@@ -553,12 +550,20 @@ final class Table
 		$this->autoIncrement = $data['autoIncrement'];
 		$this->addition = $data['addition'];
 		$this->relationTables = unserialize($data['relationTables']);
-		$this->prefix = $data['prefix'];
 		$this->defaultDataFile = $data['defaultDataFile'];
 	}
-}
 
-interface ITableFactory
-{
-	public function create(string $name, string $prefix): Table;
+	private function importData(): void
+	{
+		if ($this->defaultDataFile !== null) {
+			FileImporter::executeFile($this->connection, $this->defaultDataFile);
+		}
+		if ($this->addOnCreate !== null) {
+			if (is_array(reset($this->addOnCreate))) {
+				$this->connection->query('INSERT INTO ' . $this->name . ' %values[]', $this->addOnCreate);
+			} else {
+				$this->connection->query('INSERT INTO ' . $this->name . ' %values', $this->addOnCreate);
+			}
+		}
+	}
 }

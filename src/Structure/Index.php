@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Attreid\OrmStructure\Structure;
 
 use InvalidArgumentException;
-use JetBrains\PhpStorm\Pure;
 use Nette\SmartObject;
 
 /**
@@ -75,7 +74,7 @@ final class Index
 		return ($prefix !== null ? $prefix . ' ' : '') . "KEY [$name] ($key)";
 	}
 
-	#[Pure] public function getDefinition(): string
+	public function getDefinition(): string
 	{
 		return $this->prepare(
 			$this->name,

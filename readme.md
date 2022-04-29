@@ -1,54 +1,19 @@
-# Extension Nextras/ORM
+# MySQL structure creation for Nextras Orm
 
 Settings **config.neon**
 ```neon
 extensions:
-    dbal: Nextras\Dbal\Bridges\NetteDI\DbalExtension
-    orm: Attreid\Orm\DI\OrmExtension
+	structure: Attreid\OrmStructure\DI\StructureExtension
 
-dbal:
-    dbal:
-    driver: mysqli
-    host: 127.0.0.1
-    database: test
-    username: test
-    password: test
-
-orm:
-    model: App\Model\Orm
-    useCamelCase: true
-    autoManageDb: true # check table and create new
-    add:
-        - Another\Orm
-```
-
-## Model
-```php
-namespace App\Model;
-
-/**
- * @property-read ExampleRepository $example
- */
-class Orm extends \Nextras\Orm\Model\Model {
-    
-}
-```
-
-## Repository
-```php
-class ExampleRepository extends \Attreid\Orm\Repository {
-
-    public static function getEntityClassNames() {
-        return [Example::class];
-    }
-}
+structure:
+	autoManageDb: true
 ```
 
 ## Mapper
 ```php
-class ExampleMapper extends \Attreid\Orm\Mapper {
+class ExampleMapper extends \Attreid\OrmStructure\Mapper {
 
-    protected function createTable(\Attreid\Orm\Structure\Table $table) {
+    public function createTable(\Attreid\Orm\Structure\Table $table) {
         $table->setDefaultDataFile(__DIR__.'/import.sql');
         
         $table->addPrimaryKey('id')
@@ -83,33 +48,15 @@ class ExampleMapper extends \Attreid\Orm\Mapper {
             };
         }
         
-        $this->onCreateTable[] = function () {
-            $this->insert([
-                [
-                    'id' => 1,
-                    'someId' => 1,
-                    'parentId' => 1,
-                    'pa' => 'test',
-                    // ...
-                ]
-            ]);
-        };
+        $table->addOnCreate([
+			[
+                'id' => 1,
+                'someId' => 1,
+                'parentId' => 1,
+                'pa' => 'test',
+                // ...
+			]
+		]);
     }
 }
 ```
-
-## Entity
-```php
-/**
- * @property int $id {primary}
- * @property Some $some {m:1 Some, oneSided=true}
- * @property Example|NULL $parent {m:1 Example::$children}
- * @property OneHasMany|Example[] $children {1:m Example::$parent, orderBy=id}
- * @property string $pa
- * @property boolean $allowed {default true}
- */
-class Example extends \Nextras\Orm\Entity\Entity {
-
-}
-```
-Documentation on https://nextras.org/orm
