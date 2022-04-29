@@ -1,4 +1,4 @@
-# MySQL structure creation for Nextras Orm
+# Creating a MySQL structure for Nextras Orm
 
 Settings **config.neon**
 ```neon
