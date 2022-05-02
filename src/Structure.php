@@ -50,7 +50,7 @@ final class Structure
 
 	public function getTable(string $mapperClass): Table
 	{
-		$table = $this->tables[$mapperClass];
+		$table = $this->tables[$mapperClass] ?? null;
 		if ($table === null) {
 			$mapper = $this->mappers[$mapperClass];
 			$table = $this->tableFactory->create($mapper->getTableName());
