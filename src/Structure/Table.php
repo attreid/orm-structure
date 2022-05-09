@@ -48,26 +48,18 @@ final class Table
 
 	public string $manyHasManyStorageNamePattern = '%s_x_%s';
 	private string $database;
-	private string $name;
-	private Connection $connection;
-	private Container $container;
-	private Structure $structure;
 	private string $engine = 'InnoDB';
-	private string $charset = 'utf8';
-	private string $collate = 'utf8_czech_ci';
-	private PrimaryKey $primaryKey;
+	private string $charset = 'utf8mb4';
+	private string $collate = 'utf8mb4_czech_ci';
+	private ?PrimaryKey $primaryKey = null;
 	private ?int $autoIncrement = null;
 	private ?string $addition = null;
 	private ?string $defaultDataFile = null;
 	private ?array $addOnCreate = null;
 
-	public function __construct(string $name, Connection $connection, Container $container, Structure $structure)
+	public function __construct(private readonly string $name, private readonly Connection $connection, private readonly Container $container, private readonly Structure $structure)
 	{
 		$this->database = $connection->getConfig()['database'];
-		$this->name = $name;
-		$this->connection = $connection;
-		$this->container = $container;
-		$this->structure = $structure;
 	}
 
 	protected function getName(): string
@@ -239,13 +231,14 @@ final class Table
 			$primKey[] = $index->Column_name;
 		}
 
-		if (!$this->primaryKey->equals($primKey)) {
-			if (!empty($primKey)) {
-				$dropKeys[] = 'PRIMARY KEY';
-			}
-			if (!empty($this->primaryKey)) {
-				$add[] = $this->primaryKey->getDefinition();
-			}
+		if (
+			($this->primaryKey === null && !empty($primKey)) ||
+			(!$this->primaryKey?->equals($primKey))
+		) {
+			$dropKeys[] = 'PRIMARY KEY';
+		}
+		if (!$this->primaryKey?->equals($primKey)) {
+			$add[] = $this->primaryKey->getDefinition();
 		}
 
 		// keys
@@ -334,8 +327,7 @@ final class Table
 
 	public function addColumn(string $name): Column
 	{
-		$this->columns[$name] = $column = new Column($name);
-		$column->setTable($this);
+		$this->columns[$name] = $column = new Column($name, $this);
 		return $column;
 	}
 

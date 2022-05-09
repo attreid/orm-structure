@@ -5,23 +5,14 @@ declare(strict_types=1);
 namespace Attreid\OrmStructure\Structure;
 
 use Nextras\Dbal\Result\Row;
-use Nextras\Orm\Exception\InvalidStateException;
 
 final class Column
 {
-	private string $name;
 	private string $type;
 	private string $default = 'NOT null';
-	private Table $table;
 
-	public function __construct(string $name)
+	public function __construct(private readonly string $name, private readonly Table $table)
 	{
-		$this->name = $name;
-	}
-
-	public function setTable(Table $table): void
-	{
-		$this->table = $table;
 	}
 
 	private function prepareColumn(Row $row): string
@@ -33,7 +24,7 @@ final class Column
 		} elseif ($row->Default === null && $nullable) {
 			$default = ' DEFAULT null';
 		} else {
-			$default = ($nullable ? '' : ' NOT null') . " DEFAULT '{$row->Default}'";
+			$default = ($nullable ? '' : ' NOT null') . " DEFAULT " . $this->parseDefault($row->Default);
 		}
 
 		if (!empty($row->Collation)) {
@@ -53,6 +44,14 @@ final class Column
 			. $collate
 			. $default
 			. $autoIncrement;
+	}
+
+	private function parseDefault(string $default): string
+	{
+		return match ($default) {
+			'current_timestamp()' => 'CURRENT_TIMESTAMP',
+			default => "'$default'"
+		};
 	}
 
 	public function bool(): self

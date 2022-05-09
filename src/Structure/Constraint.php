@@ -15,24 +15,14 @@ final class Constraint
 	use SmartObject;
 
 	private string $name;
-	private string $key;
-	private string $referenceTable;
-	private string $referenceTablePrimaryKey;
-	private ?bool $onDelete;
-	private ?bool $onUpdate;
 
 	/**
 	 * @param mixed $onDelete false => RESTRICT, true => CASCADE, null => SET NULL
 	 * @param mixed $onUpdate false => RESTRICT, true => CASCADE, null => SET NULL
 	 */
-	public function __construct(string $key, string $tableName, string $referenceTable, string $referenceTablePrimaryKey, ?bool $onDelete = true, ?bool $onUpdate = false)
+	public function __construct(private readonly string $key, string $tableName, private readonly string $referenceTable, private readonly string $referenceTablePrimaryKey, private readonly ?bool $onDelete = true, private readonly ?bool $onUpdate = false)
 	{
 		$this->name = 'fk_' . $this->prepareTableName($tableName) . '_' . $key . '_' . $this->prepareTableName($referenceTable) . '_' . $referenceTablePrimaryKey;
-		$this->key = $key;
-		$this->referenceTable = $referenceTable;
-		$this->referenceTablePrimaryKey = $referenceTablePrimaryKey;
-		$this->onDelete = $onDelete;
-		$this->onUpdate = $onUpdate;
 	}
 
 	protected function getName(): string
