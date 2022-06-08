@@ -33,11 +33,6 @@ abstract class Mapper extends \Nextras\Orm\Mapper\Mapper
 		return $this->tableName;
 	}
 
-	protected function createInflector(): IInflector
-	{
-		return new CamelCaseInflector();
-	}
-
 	protected function getTablePrefix(): string
 	{
 		return '';

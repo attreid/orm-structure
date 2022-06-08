@@ -19,8 +19,8 @@ class ExampleMapper extends \Attreid\OrmStructure\Mapper {
         $table->addPrimaryKey('id')
                 ->int()
                 ->setAutoIncrement();
-        $table->addForeignKey('someId', SomeMapper::class);
-        $table->addForeignKey('parentId', $table)
+        $table->addForeignKey('some_id', SomeMapper::class);
+        $table->addForeignKey('parent_id', $table)
                 ->setDefault(NULL);
         $table->addColumn('pa')
                 ->varChar(20);
@@ -28,13 +28,13 @@ class ExampleMapper extends \Attreid\OrmStructure\Mapper {
                 ->boolean()
                 ->setDefault(1)
                 ->setKey();
-        $table->addUnique('someId', 'parentId');
+        $table->addUnique('some_id', 'parent_id');
         $table->addFulltext('pa');
 
         $relationTable = $table->createRelationTable(OtherMapper::class);
-        $relationTable->addForeignKey('exampleId', $table);
-        $relationTable->addForeignKey('otherId', OtherMapper::class);
-        $relationTable->setPrimaryKey('exampleId', 'otherId');
+        $relationTable->addForeignKey('example_id', $table);
+        $relationTable->addForeignKey('other_id', OtherMapper::class);
+        $relationTable->setPrimaryKey('example_id', 'other_id');
 
         // migration 
         if (!$relationTable->exists) {
@@ -51,8 +51,8 @@ class ExampleMapper extends \Attreid\OrmStructure\Mapper {
         $table->addOnCreate([
 			[
                 'id' => 1,
-                'someId' => 1,
-                'parentId' => 1,
+                'some_id' => 1,
+                'parent_id' => 1,
                 'pa' => 'test',
                 // ...
 			]
