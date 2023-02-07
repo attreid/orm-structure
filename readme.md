@@ -9,9 +9,9 @@ structure:
 	autoManageDb: true
 ```
 
-## Mapper
+## Table Mapper
 ```php
-class ExampleMapper extends \Attreid\OrmStructure\Mapper {
+class ExampleMapper extends \Attreid\OrmStructure\TableMapper {
 
     public function createTable(\Attreid\Orm\Structure\Table $table) {
         $table->setDefaultDataFile(__DIR__.'/import.sql');
@@ -58,5 +58,24 @@ class ExampleMapper extends \Attreid\OrmStructure\Mapper {
 			]
 		]);
     }
+}
+```
+
+## View Mapper
+```php
+class ExampleMapper extends \Attreid\OrmStructure\ViewMapper {
+
+   	public function createDefinition(QueryBuilder $builder): void
+	{
+		$builder
+			->addSelect('ROW_NUMBER() OVER (ORDER BY some_row) id')
+			->addSelect('another_row')
+			->from('some_table', 't');
+	}
+
+	protected function getPrimaryKey(): array
+	{
+		return ['id'];
+	}
 }
 ```
