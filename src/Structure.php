@@ -72,7 +72,7 @@ final class Structure
 			$mapper = $this->mappers[$mapperClass];
 			if ($mapper instanceof ViewMapper) {
 				$view = $this->viewFactory->create($mapper->getTableName());
-				$mapper->createView($view);
+				$mapper->createDefinition($view->getQueryBuilder());
 				$view->check();
 				$this->tables[$mapper::class] = $view;
 			} else {
