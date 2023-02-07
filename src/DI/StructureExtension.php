@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Attreid\OrmStructure\DI;
 
 use Attreid\OrmStructure\Interfaces\TableFactory;
+use Attreid\OrmStructure\Interfaces\ViewFactory;
 use Attreid\OrmStructure\Mapper;
 use Attreid\OrmStructure\Structure;
 use Attreid\OrmStructure\Structure\Table;
+use Attreid\OrmStructure\Structure\View;
 use Nette\DI\CompilerExtension;
 use Nette\PhpGenerator\ClassType;
 use Nette\Schema\Expect;
@@ -36,6 +38,11 @@ final class StructureExtension extends CompilerExtension
 			->setImplement(TableFactory::class)
 			->getResultDefinition()
 			->setFactory(Table::class);
+
+		$builder->addFactoryDefinition($this->prefix('viewFactory'))
+			->setImplement(ViewFactory::class)
+			->getResultDefinition()
+			->setFactory(View::class);
 	}
 
 	public function beforeCompile(): void

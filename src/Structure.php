@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Attreid\OrmStructure;
 
 use Attreid\OrmStructure\Interfaces\TableFactory;
+use Attreid\OrmStructure\Interfaces\ViewFactory;
 use Attreid\OrmStructure\Structure\Table;
+use Attreid\OrmStructure\Structure\View;
 use Nette\Caching\Cache;
 use Nette\Caching\Storage;
-use Nette\SmartObject;
+use Nette\InvalidArgumentException;
 
 final class Structure
 {
-	use SmartObject;
-
-	private bool $autoManageDb;
-	private TableFactory $tableFactory;
 	private Cache $cache;
 
 	/** @var Mapper[] */
@@ -24,10 +22,12 @@ final class Structure
 	/** @var Table[] */
 	private array $tables = [];
 
-	public function __construct(bool $autoManageDb, TableFactory $tableFactory, Storage $storage)
+	public function __construct(
+		private readonly bool         $autoManageDb,
+		private readonly TableFactory $tableFactory,
+		private readonly ViewFactory  $viewFactory,
+		Storage                       $storage)
 	{
-		$this->autoManageDb = $autoManageDb;
-		$this->tableFactory = $tableFactory;
 		$this->cache = new Cache($storage, 'ormStructure');
 	}
 
@@ -53,12 +53,33 @@ final class Structure
 		$table = $this->tables[$mapperClass] ?? null;
 		if ($table === null) {
 			$mapper = $this->mappers[$mapperClass];
-			$table = $this->tableFactory->create($mapper->getTableName());
-			$mapper->createTable($table);
-			$table->check();
-			$this->tables[$mapper::class] = $table;
+			if ($mapper instanceof TableMapper) {
+				$table = $this->tableFactory->create($mapper->getTableName());
+				$mapper->createTable($table);
+				$table->check();
+				$this->tables[$mapper::class] = $table;
+			} else {
+				throw new InvalidArgumentException("Mapper '$mapperClass' is not instance of TableMapper");
+			}
 		}
 		return $table;
+	}
+
+	private function getView(string $mapperClass): View
+	{
+		$view = $this->tables[$mapperClass] ?? null;
+		if ($view === null) {
+			$mapper = $this->mappers[$mapperClass];
+			if ($mapper instanceof ViewMapper) {
+				$view = $this->viewFactory->create($mapper->getTableName());
+				$mapper->createView($view);
+				$view->check();
+				$this->tables[$mapper::class] = $view;
+			} else {
+				throw new InvalidArgumentException("Mapper '$mapperClass' is not instance of TableMapper");
+			}
+		}
+		return $view;
 	}
 
 	public function check(): void
@@ -66,7 +87,11 @@ final class Structure
 		$key = 'loaded';
 		if (!$this->cache->load($key)) {
 			foreach ($this->mappers as $mapperClass => $mapper) {
-				$this->getTable($mapperClass);
+				if ($mapper instanceof TableMapper) {
+					$this->getTable($mapperClass);
+				} elseif ($mapper instanceof ViewMapper) {
+					$this->getView($mapperClass);
+				}
 			}
 			$this->cache->save($key, true);
 		}

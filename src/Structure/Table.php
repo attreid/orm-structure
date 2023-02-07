@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Attreid\OrmStructure\Structure;
 
-use Attreid\OrmStructure\Interfaces\TableFactory;
 use Attreid\OrmStructure\Structure;
+use Attreid\OrmStructure\TableMapper;
 use InvalidArgumentException;
-use Attreid\OrmStructure\Mapper;
-use Nette\DI\Container;
 use Nette\SmartObject;
 use Nextras\Dbal\Connection;
 use Nextras\Dbal\Drivers\Exception\QueryException;
@@ -57,7 +55,11 @@ final class Table
 	private ?string $defaultDataFile = null;
 	private ?array $addOnCreate = null;
 
-	public function __construct(private readonly string $name, private readonly Connection $connection, private readonly Container $container, private readonly Structure $structure)
+	public function __construct(
+		private readonly string     $name,
+		private readonly Connection $connection,
+		private readonly Structure  $structure
+	)
 	{
 		$this->database = $connection->getConfig()['database'];
 	}
@@ -419,7 +421,7 @@ final class Table
 	{
 		if ($table instanceof Table) {
 			return $table;
-		} elseif (is_subclass_of($table, Mapper::class)) {
+		} elseif (is_subclass_of($table, TableMapper::class)) {
 			return $this->structure->getTable($table);
 		} else {
 			throw new InvalidArgumentException("Table '$table' not exists");
@@ -429,23 +431,25 @@ final class Table
 	/** @throws QueryException */
 	private function getTableSchema(): ?Row
 	{
-		return $this->connection->query("
+		return $this->connection->query('
 			SELECT 
 				[tab.ENGINE],
 				[col.COLLATION_NAME],
 				[col.CHARACTER_SET_NAME]
 			FROM [information_schema.TABLES] tab
 			JOIN [information_schema.COLLATION_CHARACTER_SET_APPLICABILITY] col ON [tab.TABLE_COLLATION] = [col.COLLATION_NAME]
-			WHERE [tab.TABLE_SCHEMA] = %s
-				AND [tab.TABLE_NAME] = %s",
+			WHERE 
+				[tab.TABLE_SCHEMA] = %s AND
+				[tab.TABLE_NAME] = %s',
 			$this->database,
-			$this->name)->fetch();
+			$this->name
+		)->fetch();
 	}
 
 	/** @throws QueryException */
 	private function getConstraints(): ?Result
 	{
-		return $this->connection->query("
+		return $this->connection->query('
 			SELECT 
 				[col.CONSTRAINT_NAME],
 				[col.COLUMN_NAME],
@@ -455,10 +459,12 @@ final class Table
 				[ref.DELETE_RULE]
 			FROM [information_schema.REFERENTIAL_CONSTRAINTS] ref
 			JOIN [information_schema.KEY_COLUMN_USAGE] col ON [ref.CONSTRAINT_NAME] = [col.CONSTRAINT_NAME] AND [ref.CONSTRAINT_SCHEMA] = [col.CONSTRAINT_SCHEMA]
-			WHERE [ref.UNIQUE_CONSTRAINT_SCHEMA] = %s
-				AND [ref.TABLE_NAME] = %s",
+			WHERE 
+				[ref.UNIQUE_CONSTRAINT_SCHEMA] = %s AND
+				[ref.TABLE_NAME] = %s',
 			$this->database,
-			$this->name);
+			$this->name
+		);
 	}
 
 	/** @throws QueryException */
