@@ -77,5 +77,16 @@ class ExampleMapper extends \Attreid\OrmStructure\ViewMapper {
 	{
 		return ['id'];
 	}
+	
+	protected function getMapping(): array
+	{
+	    return [];
+	    
+	    // OR 
+	    
+		return [
+			'another' => 'currency_row'
+		];
+	}
 }
 ```

@@ -18,6 +18,8 @@ abstract class ViewMapper extends Mapper
 
 	abstract protected function getPrimaryKey(): array;
 
+	abstract protected function getMapping(): array;
+
 	protected function createConventions(): IConventions
 	{
 		return new class(
@@ -26,9 +28,18 @@ abstract class ViewMapper extends Mapper
 			$this->getTableName(),
 			$this->getRepository()->getEntityMetadata(),
 			$this->cache,
-			$this->getPrimaryKey()
+			$this->getPrimaryKey(),
+			$this->getMapping()
 		) extends Conventions {
-			public function __construct(IInflector $inflector, IConnection $connection, string $storageName, EntityMetadata $entityMetadata, Cache $cache, private readonly array $primaryKey)
+			public function __construct(
+				IInflector             $inflector,
+				IConnection            $connection,
+				string                 $storageName,
+				EntityMetadata         $entityMetadata,
+				Cache                  $cache,
+				private readonly array $primaryKey,
+				private readonly array $mapping
+			)
 			{
 				parent::__construct($inflector, $connection, $storageName, $entityMetadata, $cache);
 			}
@@ -40,7 +51,17 @@ abstract class ViewMapper extends Mapper
 
 			protected function getDefaultMappings(): array
 			{
-				return [];
+				$result = [
+					Conventions::TO_ENTITY => [],
+					Conventions::TO_STORAGE => [],
+					Conventions::TO_STORAGE_FLATTENING => [],
+				];
+				foreach ($this->mapping as $entity => $storage) {
+					$result[Conventions::TO_ENTITY][$storage] = [$entity, null];
+					$result[Conventions::TO_STORAGE][$entity] = [$storage, null];
+				}
+
+				return $result;
 			}
 
 			protected function getDefaultModifiers(): array
