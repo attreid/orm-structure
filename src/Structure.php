@@ -89,7 +89,10 @@ final class Structure
 			foreach ($this->mappers as $mapperClass => $mapper) {
 				if ($mapper instanceof TableMapper) {
 					$this->getTable($mapperClass);
-				} elseif ($mapper instanceof ViewMapper) {
+				}
+			}
+			foreach ($this->mappers as $mapperClass => $mapper) {
+				if ($mapper instanceof ViewMapper) {
 					$this->getView($mapperClass);
 				}
 			}
